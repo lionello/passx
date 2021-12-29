@@ -14,6 +14,15 @@
 		DDBC556C277C0C9E00544E4D /* passxTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBC556B277C0C9E00544E4D /* passxTests.swift */; };
 		DDBC5576277C0C9E00544E4D /* passxUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBC5575277C0C9E00544E4D /* passxUITests.swift */; };
 		DDBC5578277C0C9E00544E4D /* passxUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBC5577277C0C9E00544E4D /* passxUITestsLaunchTests.swift */; };
+		DDBC5585277C0E3A00544E4D /* Pass.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBC5584277C0E3A00544E4D /* Pass.swift */; };
+		DDBC5587277C140C00544E4D /* Pipe.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBC5586277C140C00544E4D /* Pipe.swift */; };
+		DDBC5589277C184500544E4D /* GpgPass.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBC5588277C184500544E4D /* GpgPass.swift */; };
+		DDBC558B277C185A00544E4D /* GoPass.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBC558A277C185A00544E4D /* GoPass.swift */; };
+		DDBC558D277C269700544E4D /* FloatingPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBC558C277C269700544E4D /* FloatingPanel.swift */; };
+		DDBC558F277C27B300544E4D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBC558E277C27B300544E4D /* AppDelegate.swift */; };
+		DDBC5592277C295200544E4D /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = DDBC5591277C295200544E4D /* KeyboardShortcuts */; };
+		DDBC5594277C309500544E4D /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBC5593277C309500544E4D /* main.swift */; };
+		DDBC5596277C398700544E4D /* Paste.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBC5595277C398700544E4D /* Paste.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -45,6 +54,14 @@
 		DDBC5571277C0C9E00544E4D /* passxUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = passxUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		DDBC5575277C0C9E00544E4D /* passxUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = passxUITests.swift; sourceTree = "<group>"; };
 		DDBC5577277C0C9E00544E4D /* passxUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = passxUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		DDBC5584277C0E3A00544E4D /* Pass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pass.swift; sourceTree = "<group>"; };
+		DDBC5586277C140C00544E4D /* Pipe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pipe.swift; sourceTree = "<group>"; };
+		DDBC5588277C184500544E4D /* GpgPass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GpgPass.swift; sourceTree = "<group>"; };
+		DDBC558A277C185A00544E4D /* GoPass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoPass.swift; sourceTree = "<group>"; };
+		DDBC558C277C269700544E4D /* FloatingPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingPanel.swift; sourceTree = "<group>"; };
+		DDBC558E277C27B300544E4D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		DDBC5593277C309500544E4D /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		DDBC5595277C398700544E4D /* Paste.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Paste.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -52,6 +69,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DDBC5592277C295200544E4D /* KeyboardShortcuts in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -100,6 +118,14 @@
 				DDBC555D277C0C9E00544E4D /* Assets.xcassets */,
 				DDBC5562277C0C9E00544E4D /* passx.entitlements */,
 				DDBC555F277C0C9E00544E4D /* Preview Content */,
+				DDBC5584277C0E3A00544E4D /* Pass.swift */,
+				DDBC5586277C140C00544E4D /* Pipe.swift */,
+				DDBC5588277C184500544E4D /* GpgPass.swift */,
+				DDBC558A277C185A00544E4D /* GoPass.swift */,
+				DDBC558C277C269700544E4D /* FloatingPanel.swift */,
+				DDBC558E277C27B300544E4D /* AppDelegate.swift */,
+				DDBC5593277C309500544E4D /* main.swift */,
+				DDBC5595277C398700544E4D /* Paste.swift */,
 			);
 			path = passx;
 			sourceTree = "<group>";
@@ -145,6 +171,9 @@
 			dependencies = (
 			);
 			name = passx;
+			packageProductDependencies = (
+				DDBC5591277C295200544E4D /* KeyboardShortcuts */,
+			);
 			productName = passx;
 			productReference = DDBC5556277C0C9D00544E4D /* passx.app */;
 			productType = "com.apple.product-type.application";
@@ -217,6 +246,9 @@
 				Base,
 			);
 			mainGroup = DDBC554D277C0C9D00544E4D;
+			packageReferences = (
+				DDBC5590277C295200544E4D /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */,
+			);
 			productRefGroup = DDBC5557277C0C9D00544E4D /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -259,8 +291,16 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DDBC558F277C27B300544E4D /* AppDelegate.swift in Sources */,
 				DDBC555C277C0C9D00544E4D /* ContentView.swift in Sources */,
+				DDBC5594277C309500544E4D /* main.swift in Sources */,
+				DDBC5589277C184500544E4D /* GpgPass.swift in Sources */,
+				DDBC558D277C269700544E4D /* FloatingPanel.swift in Sources */,
+				DDBC558B277C185A00544E4D /* GoPass.swift in Sources */,
+				DDBC5585277C0E3A00544E4D /* Pass.swift in Sources */,
 				DDBC555A277C0C9D00544E4D /* passxApp.swift in Sources */,
+				DDBC5587277C140C00544E4D /* Pipe.swift in Sources */,
+				DDBC5596277C398700544E4D /* Paste.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -422,6 +462,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"passx/Preview Content\"";
+				DEVELOPMENT_TEAM = FE3JVHBHV2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -447,6 +488,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"passx/Preview Content\"";
+				DEVELOPMENT_TEAM = FE3JVHBHV2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -570,6 +612,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		DDBC5590277C295200544E4D /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sindresorhus/KeyboardShortcuts";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		DDBC5591277C295200544E4D /* KeyboardShortcuts */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DDBC5590277C295200544E4D /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */;
+			productName = KeyboardShortcuts;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = DDBC554E277C0C9D00544E4D /* Project object */;
 }
