@@ -13,4 +13,6 @@ enum PassError: Error {
 
 protocol Pass {
     func getLogin(entry: String) throws -> String?
+    func query(query: String) throws -> [String]
+    func queryHost(host: String) throws -> [String]
 }

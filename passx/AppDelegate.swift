@@ -43,7 +43,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     private func createFloatingPanel() {
-
         
         // Create the window and set the content view.
         newEntryPanel = FloatingPanel(contentRect: NSRect(x: 0, y: 0, width: 512, height: 80), backing: .buffered, defer: false)

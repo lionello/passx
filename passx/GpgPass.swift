@@ -8,6 +8,14 @@
 import Foundation
 
 class GpgPass : Pass {
+    func query(query: String) throws -> [String] {
+        return []
+    }
+    
+    func queryHost(host: String) throws -> [String] {
+        return []
+    }
+    
     private let gpg: String
     private let store: String
     

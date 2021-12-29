@@ -16,6 +16,31 @@ class GoPass : Pass {
     }
     
     func getLogin(entry: String) throws -> String? {
+        let json: [String:String]  = [
+             "type": "getLogin",
+             "entry": entry,
+        ]
+        let map = try doIO(json) as! [String:Any]
+        return map["password"] as? String
+    }
+    
+    func query(query: String) throws -> [String] {
+        let json: [String:String]  = [
+             "type": "query",
+             "query": query,
+        ]
+        return try doIO(json) as! [String]
+    }
+    
+    func queryHost(host: String) throws -> [String] {
+        let json: [String:String]  = [
+             "type": "queryHost",
+             "host": host,
+        ]
+        return try doIO(json) as! [String]
+    }
+    
+    private func doIO(_ json: Any) throws -> Any {
         let task = Process()
         task.executableURL = URL(fileURLWithPath: self.wrapper)
         let inputPipe = Pipe()
@@ -25,10 +50,6 @@ class GoPass : Pass {
         let errorPipe = Pipe()
         task.standardError = errorPipe
         
-        let json: [String:String]  = [
-             "type": "getLogin",
-             "entry": entry,
-        ]
         let data = try JSONSerialization.data(withJSONObject: json, options: [])
         try inputPipe.fileHandleForWriting.write(contentsOf: data.nativeMessage())
 
@@ -38,8 +59,7 @@ class GoPass : Pass {
         if task.terminationStatus != 0 {
             throw PassError.err(msg: try errorPipe.readUtf8())
         }
-        let map = try JSONSerialization.jsonObject(with: try outputPipe.readNativeMessage()!, options: []) as! [String:Any]
-        return map["password"] as? String
+        return try JSONSerialization.jsonObject(with: try outputPipe.readNativeMessage()!, options: [])
     }
 }
 

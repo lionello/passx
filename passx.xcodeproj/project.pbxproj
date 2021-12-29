@@ -113,19 +113,19 @@
 		DDBC5558277C0C9D00544E4D /* passx */ = {
 			isa = PBXGroup;
 			children = (
-				DDBC5559277C0C9D00544E4D /* passxApp.swift */,
-				DDBC555B277C0C9D00544E4D /* ContentView.swift */,
-				DDBC555D277C0C9E00544E4D /* Assets.xcassets */,
 				DDBC5562277C0C9E00544E4D /* passx.entitlements */,
-				DDBC555F277C0C9E00544E4D /* Preview Content */,
-				DDBC5584277C0E3A00544E4D /* Pass.swift */,
-				DDBC5586277C140C00544E4D /* Pipe.swift */,
-				DDBC5588277C184500544E4D /* GpgPass.swift */,
-				DDBC558A277C185A00544E4D /* GoPass.swift */,
-				DDBC558C277C269700544E4D /* FloatingPanel.swift */,
 				DDBC558E277C27B300544E4D /* AppDelegate.swift */,
+				DDBC555B277C0C9D00544E4D /* ContentView.swift */,
+				DDBC558C277C269700544E4D /* FloatingPanel.swift */,
+				DDBC558A277C185A00544E4D /* GoPass.swift */,
+				DDBC5588277C184500544E4D /* GpgPass.swift */,
 				DDBC5593277C309500544E4D /* main.swift */,
+				DDBC5584277C0E3A00544E4D /* Pass.swift */,
+				DDBC5559277C0C9D00544E4D /* passxApp.swift */,
 				DDBC5595277C398700544E4D /* Paste.swift */,
+				DDBC5586277C140C00544E4D /* Pipe.swift */,
+				DDBC555D277C0C9E00544E4D /* Assets.xcassets */,
+				DDBC555F277C0C9E00544E4D /* Preview Content */,
 			);
 			path = passx;
 			sourceTree = "<group>";
