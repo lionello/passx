@@ -16,12 +16,14 @@ extension KeyboardShortcuts.Name {
 }
 
 class AppDelegate: NSObject, NSApplicationDelegate {
-    
+
+    static let HOME = ProcessInfo.processInfo.environment["HOME"]!
+
     var newEntryPanel: FloatingPanel!
-    var pass: Pass!
+    var pass: PassProtocol!
     
     func applicationDidFinishLaunching(_ notification: Notification) {
-        pass = GoPass(wrapper: "/Users/llunesu/.config/gopass/gopass_wrapper.sh")
+        pass = GoPass(wrapper: "\(AppDelegate.HOME)/.config/gopass/gopass_wrapper.sh")
 
         createFloatingPanel()
         
@@ -29,12 +31,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         newEntryPanel.center()
         
         // Shows the panel and makes it active
-        newEntryPanel.orderFront(nil)
-        newEntryPanel.makeKey()
-        
+        newEntryPanel.makeKeyAndOrderFront(nil)
+
         KeyboardShortcuts.onKeyUp(for: .showFloatingPanel, action: {
-            self.newEntryPanel.orderFront(nil)
-            self.newEntryPanel.makeKey()
+            self.newEntryPanel.makeKeyAndOrderFront(nil)
         })
     }
     
@@ -45,7 +45,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func createFloatingPanel() {
         
         // Create the window and set the content view.
-        newEntryPanel = FloatingPanel(contentRect: NSRect(x: 0, y: 0, width: 512, height: 80), backing: .buffered, defer: false)
+        newEntryPanel = FloatingPanel(contentRect: NSRect(x: 0, y: 0, width: 512, height: 20), backing: .buffered, defer: false)
         
         // Create the SwiftUI view that provides the window contents.
         // I've opted to ignore top safe area as well, since we're hiding the traffic icons

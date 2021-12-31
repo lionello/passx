@@ -7,14 +7,16 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		DD6F8674277D4E2800E903D4 /* GoPassTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD6F8673277D4E2800E903D4 /* GoPassTests.swift */; };
+		DD6F8678277FBBB500E903D4 /* SearchTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD6F8677277FBBB500E903D4 /* SearchTextField.swift */; };
 		DDBC555A277C0C9D00544E4D /* passxApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBC5559277C0C9D00544E4D /* passxApp.swift */; };
 		DDBC555C277C0C9D00544E4D /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBC555B277C0C9D00544E4D /* ContentView.swift */; };
 		DDBC555E277C0C9E00544E4D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DDBC555D277C0C9E00544E4D /* Assets.xcassets */; };
 		DDBC5561277C0C9E00544E4D /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DDBC5560277C0C9E00544E4D /* Preview Assets.xcassets */; };
-		DDBC556C277C0C9E00544E4D /* passxTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBC556B277C0C9E00544E4D /* passxTests.swift */; };
+		DDBC556C277C0C9E00544E4D /* GpgPassTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBC556B277C0C9E00544E4D /* GpgPassTests.swift */; };
 		DDBC5576277C0C9E00544E4D /* passxUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBC5575277C0C9E00544E4D /* passxUITests.swift */; };
 		DDBC5578277C0C9E00544E4D /* passxUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBC5577277C0C9E00544E4D /* passxUITestsLaunchTests.swift */; };
-		DDBC5585277C0E3A00544E4D /* Pass.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBC5584277C0E3A00544E4D /* Pass.swift */; };
+		DDBC5585277C0E3A00544E4D /* PassProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBC5584277C0E3A00544E4D /* PassProtocol.swift */; };
 		DDBC5587277C140C00544E4D /* Pipe.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBC5586277C140C00544E4D /* Pipe.swift */; };
 		DDBC5589277C184500544E4D /* GpgPass.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBC5588277C184500544E4D /* GpgPass.swift */; };
 		DDBC558B277C185A00544E4D /* GoPass.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBC558A277C185A00544E4D /* GoPass.swift */; };
@@ -22,7 +24,7 @@
 		DDBC558F277C27B300544E4D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBC558E277C27B300544E4D /* AppDelegate.swift */; };
 		DDBC5592277C295200544E4D /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = DDBC5591277C295200544E4D /* KeyboardShortcuts */; };
 		DDBC5594277C309500544E4D /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBC5593277C309500544E4D /* main.swift */; };
-		DDBC5596277C398700544E4D /* Paste.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBC5595277C398700544E4D /* Paste.swift */; };
+		DDBC5596277C398700544E4D /* PasteUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBC5595277C398700544E4D /* PasteUtil.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -43,6 +45,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		DD6F8673277D4E2800E903D4 /* GoPassTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoPassTests.swift; sourceTree = "<group>"; };
+		DD6F8677277FBBB500E903D4 /* SearchTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchTextField.swift; sourceTree = "<group>"; };
 		DDBC5556277C0C9D00544E4D /* passx.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = passx.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DDBC5559277C0C9D00544E4D /* passxApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = passxApp.swift; sourceTree = "<group>"; };
 		DDBC555B277C0C9D00544E4D /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -50,18 +54,18 @@
 		DDBC5560277C0C9E00544E4D /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		DDBC5562277C0C9E00544E4D /* passx.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = passx.entitlements; sourceTree = "<group>"; };
 		DDBC5567277C0C9E00544E4D /* passxTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = passxTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		DDBC556B277C0C9E00544E4D /* passxTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = passxTests.swift; sourceTree = "<group>"; };
+		DDBC556B277C0C9E00544E4D /* GpgPassTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GpgPassTests.swift; sourceTree = "<group>"; };
 		DDBC5571277C0C9E00544E4D /* passxUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = passxUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		DDBC5575277C0C9E00544E4D /* passxUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = passxUITests.swift; sourceTree = "<group>"; };
 		DDBC5577277C0C9E00544E4D /* passxUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = passxUITestsLaunchTests.swift; sourceTree = "<group>"; };
-		DDBC5584277C0E3A00544E4D /* Pass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pass.swift; sourceTree = "<group>"; };
+		DDBC5584277C0E3A00544E4D /* PassProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassProtocol.swift; sourceTree = "<group>"; };
 		DDBC5586277C140C00544E4D /* Pipe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pipe.swift; sourceTree = "<group>"; };
 		DDBC5588277C184500544E4D /* GpgPass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GpgPass.swift; sourceTree = "<group>"; };
 		DDBC558A277C185A00544E4D /* GoPass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoPass.swift; sourceTree = "<group>"; };
 		DDBC558C277C269700544E4D /* FloatingPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingPanel.swift; sourceTree = "<group>"; };
 		DDBC558E277C27B300544E4D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		DDBC5593277C309500544E4D /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
-		DDBC5595277C398700544E4D /* Paste.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Paste.swift; sourceTree = "<group>"; };
+		DDBC5595277C398700544E4D /* PasteUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteUtil.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -120,10 +124,11 @@
 				DDBC558A277C185A00544E4D /* GoPass.swift */,
 				DDBC5588277C184500544E4D /* GpgPass.swift */,
 				DDBC5593277C309500544E4D /* main.swift */,
-				DDBC5584277C0E3A00544E4D /* Pass.swift */,
+				DDBC5584277C0E3A00544E4D /* PassProtocol.swift */,
 				DDBC5559277C0C9D00544E4D /* passxApp.swift */,
-				DDBC5595277C398700544E4D /* Paste.swift */,
+				DDBC5595277C398700544E4D /* PasteUtil.swift */,
 				DDBC5586277C140C00544E4D /* Pipe.swift */,
+				DD6F8677277FBBB500E903D4 /* SearchTextField.swift */,
 				DDBC555D277C0C9E00544E4D /* Assets.xcassets */,
 				DDBC555F277C0C9E00544E4D /* Preview Content */,
 			);
@@ -141,7 +146,8 @@
 		DDBC556A277C0C9E00544E4D /* passxTests */ = {
 			isa = PBXGroup;
 			children = (
-				DDBC556B277C0C9E00544E4D /* passxTests.swift */,
+				DDBC556B277C0C9E00544E4D /* GpgPassTests.swift */,
+				DD6F8673277D4E2800E903D4 /* GoPassTests.swift */,
 			);
 			path = passxTests;
 			sourceTree = "<group>";
@@ -292,15 +298,16 @@
 			buildActionMask = 2147483647;
 			files = (
 				DDBC558F277C27B300544E4D /* AppDelegate.swift in Sources */,
+				DD6F8678277FBBB500E903D4 /* SearchTextField.swift in Sources */,
 				DDBC555C277C0C9D00544E4D /* ContentView.swift in Sources */,
 				DDBC5594277C309500544E4D /* main.swift in Sources */,
 				DDBC5589277C184500544E4D /* GpgPass.swift in Sources */,
 				DDBC558D277C269700544E4D /* FloatingPanel.swift in Sources */,
 				DDBC558B277C185A00544E4D /* GoPass.swift in Sources */,
-				DDBC5585277C0E3A00544E4D /* Pass.swift in Sources */,
+				DDBC5585277C0E3A00544E4D /* PassProtocol.swift in Sources */,
 				DDBC555A277C0C9D00544E4D /* passxApp.swift in Sources */,
 				DDBC5587277C140C00544E4D /* Pipe.swift in Sources */,
-				DDBC5596277C398700544E4D /* Paste.swift in Sources */,
+				DDBC5596277C398700544E4D /* PasteUtil.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -308,7 +315,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DDBC556C277C0C9E00544E4D /* passxTests.swift in Sources */,
+				DD6F8674277D4E2800E903D4 /* GoPassTests.swift in Sources */,
+				DDBC556C277C0C9E00544E4D /* GpgPassTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

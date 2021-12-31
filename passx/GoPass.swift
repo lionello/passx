@@ -8,7 +8,7 @@
 import Foundation
 
 
-class GoPass : Pass {
+class GoPass : PassProtocol {
     private let wrapper: String
     
     init(wrapper: String) {
@@ -20,27 +20,27 @@ class GoPass : Pass {
              "type": "getLogin",
              "entry": entry,
         ]
-        let map = try doIO(json) as! [String:Any]
+        let map = try invokeJsonApi(json) as! [String:Any]
         return map["password"] as? String
     }
     
-    func query(query: String) throws -> [String] {
+    func query(_ query: String) throws -> [String] {
         let json: [String:String]  = [
              "type": "query",
              "query": query,
         ]
-        return try doIO(json) as! [String]
+        return try invokeJsonApi(json) as! [String]
     }
     
-    func queryHost(host: String) throws -> [String] {
+    func queryHost(_ host: String) throws -> [String] {
         let json: [String:String]  = [
              "type": "queryHost",
              "host": host,
         ]
-        return try doIO(json) as! [String]
+        return try invokeJsonApi(json) as! [String]
     }
     
-    private func doIO(_ json: Any) throws -> Any {
+    private func invokeJsonApi(_ json: Any) throws -> Any {
         let task = Process()
         task.executableURL = URL(fileURLWithPath: self.wrapper)
         let inputPipe = Pipe()

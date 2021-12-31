@@ -9,10 +9,11 @@ import Foundation
 
 enum PassError: Error {
     case err(msg: String?)
+    case notImplemented
 }
 
-protocol Pass {
+protocol PassProtocol {
     func getLogin(entry: String) throws -> String?
-    func query(query: String) throws -> [String]
-    func queryHost(host: String) throws -> [String]
+    func query(_ query: String) throws -> [String]
+    func queryHost(_ host: String) throws -> [String]
 }

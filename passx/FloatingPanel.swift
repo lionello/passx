@@ -3,12 +3,12 @@
 //  passx
 //
 //  Created by Lionello Lunesu on 2021-12-28.
+//  From https://www.markusbodner.com/til/2021/02/08/create-a-spotlight/alfred-like-window-on-macos-with-swiftui/
 //
 
 import Foundation
 import SwiftUI
 
-// From https://www.markusbodner.com/til/2021/02/08/create-a-spotlight/alfred-like-window-on-macos-with-swiftui/
 // MARK: - Floating Panel
 
 class FloatingPanel: NSPanel {

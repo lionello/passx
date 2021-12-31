@@ -7,13 +7,14 @@
 
 import Foundation
 
-class GpgPass : Pass {
-    func query(query: String) throws -> [String] {
-        return []
+class GpgPass : PassProtocol {
+
+    func query(_ query: String) throws -> [String] {
+        throw PassError.notImplemented
     }
     
-    func queryHost(host: String) throws -> [String] {
-        return []
+    func queryHost(_ host: String) throws -> [String] {
+        throw PassError.notImplemented
     }
     
     private let gpg: String
@@ -26,7 +27,6 @@ class GpgPass : Pass {
     
     func getLogin(entry: String) throws -> String? {
         let task = Process()
-        task.environment = ["GPG_TTY": "/dev/ttys007"]
         task.executableURL = URL(fileURLWithPath: self.gpg)
         let outputPipe = Pipe()
         task.standardOutput = outputPipe

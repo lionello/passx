@@ -3,11 +3,12 @@
 //  passx
 //
 //  Created by Lionello Lunesu on 2021-12-28.
+//  From https://www.hackingwithswift.com/forums/macos/how-can-i-programmatically-enter-text-to-an-arbitrary-application-first-responder/1612
 //
 
 import Foundation
 
-class Paste {
+class PasteUtil {
     func paste(_ str: String) {
         let utf16Chars = Array(str.utf16)
 
