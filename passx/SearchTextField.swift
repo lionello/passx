@@ -22,20 +22,22 @@ struct SearchTextField: View {
     var placeholder: String = "Search..."
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 5, style: .continuous)
+            RoundedRectangle(cornerRadius: 3, style: .continuous)
                 .fill(Color.white)
 //                .frame(width: 200, height: 22)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 5, style: .continuous)
-                        .stroke(isFocused ? Color.blue.opacity(0.7) : Color.gray.opacity(0.4), lineWidth: isFocused ? 3 : 1)
+                    RoundedRectangle(cornerRadius: 3, style: .continuous)
+                        .stroke(isFocused ? Color.red.opacity(0.7) : Color.gray.opacity(0.4), lineWidth: isFocused ? 2 : 1)
 //                        .frame(width: 200, height: 21)
                 )
+                .padding(1)
 
             HStack {
                 Image(systemName: "magnifyingglass").resizable().aspectRatio(contentMode: .fill)
                     .frame(width:12, height: 12)
                     .padding(.leading, 5)
                     .opacity(0.8)
+
                 TextField(placeholder, text: $query, onEditingChanged: { (editingChanged) in
                     if editingChanged {
                         self.isFocused = true
@@ -44,6 +46,9 @@ struct SearchTextField: View {
                     }
                 })
                     .textFieldStyle(PlainTextFieldStyle())
+//                    .keyboardShortcut(KeyEquivalent("l"), modifiers: .command)
+//                    .focused($isFocused)
+//                    .keyboardShortcut(.return)
                 if query != "" {
                     Button(action: {
                         self.query = ""

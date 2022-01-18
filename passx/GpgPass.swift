@@ -48,3 +48,13 @@ class GpgPass : PassProtocol {
         return nil
     }
 }
+
+extension Pipe {
+
+    func readUtf8() throws -> String? {
+        guard let data = try self.fileHandleForReading.readToEnd() else {
+            return nil
+        }
+        return String(data: data, encoding: .utf8)
+    }
+}

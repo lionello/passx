@@ -1,5 +1,5 @@
 //
-//  GoPassTests.swift
+//  GoPassWrapperTests.swift
 //  passxTests
 //
 //  Created by Lionello Lunesu on 2021-12-29.
@@ -8,9 +8,9 @@
 import XCTest
 @testable import passx
 
-class GoPassTests: XCTestCase {
+class GoPassWrapperTests: XCTestCase {
     let test = "zc.qq.com"
-    let pass = GoPass(wrapper: "\(AppDelegate.HOME)/.config/gopass/gopass_wrapper.sh")
+    let pass = GoPassWrapper(wrapper: "\(AppDelegate.HOME)/.config/gopass/gopass_wrapper.sh")
 
     func testGoPassLogin() throws {
         let pw = try pass.getLogin(entry: test)
