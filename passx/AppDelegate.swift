@@ -33,7 +33,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Shows the panel and makes it active
         newEntryPanel.makeKeyAndOrderFront(nil)
 
-        KeyboardShortcuts.setShortcut(.init(.f12, modifiers: [.command]), for: .showFloatingPanel)
         KeyboardShortcuts.onKeyUp(for: .showFloatingPanel, action: {
             self.newEntryPanel.makeKeyAndOrderFront(nil)
         })

@@ -26,22 +26,31 @@ class PasteUtil {
         event2?.post(tap: .cghidEventTap)
     }
 
-    static func paste(_ str: String) {
-        str.forEach {
-            if let p = charToKeyCode(ch: $0) {
-                paste(vk: p.vk, flags: p.flags)
-            }
+    static func paste(keys: [KeyCode]) {
+        keys.forEach {
+            paste(vk: $0.vk, flags: $0.flags)
         }
+    }
 
-//        let utf16Chars = Array(str.utf16)
-//        let event1 = CGEvent(keyboardEventSource: nil, virtualKey: 0x31, keyDown: true);
-//        event1?.flags = .maskNonCoalesced
-//        event1?.keyboardSetUnicodeString(stringLength: utf16Chars.count, unicodeString: utf16Chars)
-//        event1?.post(tap: .cghidEventTap)
-//
-//        let event2 = CGEvent(keyboardEventSource: nil, virtualKey: 0x31, keyDown: false);
-//        event2?.flags = .maskNonCoalesced
-//        event2?.post(tap: .cghidEventTap)
+    static func stringToKeyCodes(_ str: String) throws -> [KeyCode] {
+        try str.map {
+            guard let kc = charToKeyCode(ch: $0) else {
+                throw PassError.err(msg: "Don't know how to press '\($0)'")
+            }
+            return kc
+        }
+    }
+
+    static func paste(str: String) {
+        let utf16Chars = Array(str.utf16)
+        let event1 = CGEvent(keyboardEventSource: nil, virtualKey: 0x31, keyDown: true);
+        event1?.flags = .maskNonCoalesced
+        event1?.keyboardSetUnicodeString(stringLength: utf16Chars.count, unicodeString: utf16Chars)
+        event1?.post(tap: .cghidEventTap)
+
+        let event2 = CGEvent(keyboardEventSource: nil, virtualKey: 0x31, keyDown: false);
+        event2?.flags = .maskNonCoalesced
+        event2?.post(tap: .cghidEventTap)
     }
 
     private static func keyCodeToString(keyCode: CGKeyCode, eventModifiers: Int) -> String? {
@@ -71,94 +80,26 @@ class PasteUtil {
         return NSString(characters: unicodeString, length: actualStringLength) as String
     }
 
-    struct Pair {
+    struct KeyCode {
         var vk: CGKeyCode
         var flags: CGEventFlags
     }
 
-    private static var dict: [String: Pair] = [:]
+    private static var dict: [String: KeyCode] = [:]
 
-    private static func charToKeyCode(ch: Character) -> Pair? {
+    private static func charToKeyCode(ch: Character) -> KeyCode? {
         if dict.isEmpty {
             // For every keyCode, find the character(s) with and without SHIFT
             for i in 0..<128 {
                 let keyCode = CGKeyCode(i)
                 if let str = keyCodeToString(keyCode: keyCode, eventModifiers: 0) {
-                    dict[str] = Pair(vk: keyCode, flags: CGEventFlags(rawValue: 0))
+                    dict[str] = KeyCode(vk: keyCode, flags: CGEventFlags(rawValue: 0))
                 }
                 if let str = keyCodeToString(keyCode: keyCode, eventModifiers: shiftKey) {
-                    dict[str] = Pair(vk: keyCode, flags: .maskShift)
+                    dict[str] = KeyCode(vk: keyCode, flags: .maskShift)
                 }
             }
         }
         return dict[String(ch)]
     }
 }
-
-/*
- NSString* keyCodeToString(CGKeyCode keyCode)
- {
-   TISInputSourceRef currentKeyboard = TISCopyCurrentKeyboardInputSource();
-   CFDataRef uchr =
-     (CFDataRef)TISGetInputSourceProperty(currentKeyboard,
-                                          kTISPropertyUnicodeKeyLayoutData);
-   const UCKeyboardLayout *keyboardLayout =
-     (const UCKeyboardLayout*)CFDataGetBytePtr(uchr);
-
-   if(keyboardLayout)
-   {
-     UInt32 deadKeyState = 0;
-     UniCharCount maxStringLength = 255;
-     UniCharCount actualStringLength = 0;
-     UniChar unicodeString[maxStringLength];
-
-     OSStatus status = UCKeyTranslate(keyboardLayout,
-                                      keyCode, kUCKeyActionDown, 0,
-                                      LMGetKbdType(), 0,
-                                      &deadKeyState,
-                                      maxStringLength,
-                                      &actualStringLength, unicodeString);
-
-     if (actualStringLength == 0 && deadKeyState)
-     {
-       status = UCKeyTranslate(keyboardLayout,
-                                        kVK_Space, kUCKeyActionDown, 0,
-                                        LMGetKbdType(), 0,
-                                        &deadKeyState,
-                                        maxStringLength,
-                                        &actualStringLength, unicodeString);
-     }
-     if(actualStringLength > 0 && status == noErr)
-       return [[NSString stringWithCharacters:unicodeString
-                         length:(NSUInteger)actualStringLength] lowercaseString];
-   }
-
-   return nil;
- }
-
- NSNumber* charToKeyCode(const char c)
- {
-   static NSMutableDictionary* dict = nil;
-
-   if (dict == nil)
-   {
-     dict = [NSMutableDictionary dictionary];
-
-     // For every keyCode
-     size_t i;
-     for (i = 0; i < 128; ++i)
-     {
-       NSString* str = keyCodeToString((CGKeyCode)i);
-       if(str != nil && ![str isEqualToString:@""])
-       {
-         [dict setObject:[NSNumber numberWithInt:i] forKey:str];
-       }
-     }
-   }
-
-   NSString * keyChar = [NSString stringWithFormat:@"%c" , c];
-
-   return [dict objectForKey:keyChar];
- }
- */
-

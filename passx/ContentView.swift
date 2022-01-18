@@ -39,6 +39,11 @@ struct ContentView: View {
                     }
                     do {
                         self.lastResult = try (NSApplication.shared.delegate as! AppDelegate).pass.query(text)
+//                        if let result = self.lastResult.first {
+//                            $0.starts(with: text)
+//                        } {
+//                            self.query = result
+//                        }
                         if lastResult.count > 0 {
 //                            opt = 0
 //                            let result = lastResult[opt]
@@ -77,7 +82,6 @@ struct ContentView: View {
                         let username = String(str[str.index(after: slash)...])
                         Text(String(str[path]))
                         Button(username) {
-                            print("submit username \(username )")
                             submitText(username)
                         }
                     } else {
@@ -89,7 +93,6 @@ struct ContentView: View {
                 }
                 .focused($focusField, equals: .result(id: str))
             }
-
 //            .onMoveCommand { (direction) in
 //                switch direction {
 //                case .down:
@@ -101,12 +104,22 @@ struct ContentView: View {
         }
     }
 
-    func submitText(_ text: String) {
+    func submitAndClose(_ text: String) throws {
+        let keys = try PasteUtil.stringToKeyCodes(text)
         DispatchQueue.main.async {
             self.myWindow?.close()
             NSApplication.shared.hide(nil)
 
-            PasteUtil.paste(text)
+            PasteUtil.paste(keys: keys)
+        }
+    }
+
+    func submitText(_ text: String) {
+        do {
+            print("submit text \(text)")
+            try submitAndClose(text)
+        } catch {
+            // TODO: show an error message
         }
     }
 
@@ -114,10 +127,10 @@ struct ContentView: View {
         do {
             print("submit entry \(entry)")
             if let pw = try (NSApplication.shared.delegate as! AppDelegate).pass.getLogin(entry: entry) {
-                submitText(pw)
+                try submitAndClose(pw)
             }
         } catch {
-            //ignore
+            // TODO: show an error message
         }
     }
 }
