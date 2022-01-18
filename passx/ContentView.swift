@@ -34,31 +34,25 @@ struct ContentView: View {
                         return
                     }
                     let text = textField.string
-                    if text.count <= 2 || lastResult.contains(text) {
+                    if text.count <= 1 {
                         return
                     }
-                    do {
-                        self.lastResult = try (NSApplication.shared.delegate as! AppDelegate).pass.query(text)
-//                        if let result = self.lastResult.first {
-//                            $0.starts(with: text)
-//                        } {
-//                            self.query = result
-//                        }
-                        if lastResult.count > 0 {
-//                            opt = 0
-//                            let result = lastResult[opt]
+                    if let result = self.lastResult.first(where: { $0.starts(with: text) }) {
+                        DispatchQueue.main.async {
+                            self.query = result
                             DispatchQueue.main.async {
-//                                query = result
-//                                DispatchQueue.main.async {
-//                                    let nsText = result as NSString
-//                                    let after = nsText.range(of: text).upperBound
-//                                    let range = NSMakeRange(after, nsText.length - after)
-//                                    textField.setSelectedRange(range)
-//                                }
+                                let nsText = result as NSString
+                                let after = nsText.range(of: text).upperBound
+                                let range = NSMakeRange(after, nsText.length - after)
+                                textField.setSelectedRange(range)
                             }
                         }
-                    } catch {
-                        // ignore
+                    } else {
+                        do {
+                            self.lastResult = try (NSApplication.shared.delegate as! AppDelegate).pass.query(text)
+                        } catch {
+                            // ignore
+                        }
                     }
                 }
                 .onSubmit {
