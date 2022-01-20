@@ -12,8 +12,22 @@ enum PassError: Error {
     case notImplemented
 }
 
+enum PassField : String {
+    case password
+    case username
+    case otpauth
+    case url
+
+    func prefix() -> String {
+        if self == .password {
+            return ""
+        }
+        return self.rawValue + ": "
+    }
+}
+
 protocol PassProtocol {
-    func getLogin(entry: String) throws -> String?
+    func getLogin(entry: String, field: PassField) throws -> String?
     func query(_ query: String) throws -> [String]
     func queryHost(_ host: String) throws -> [String]
 }

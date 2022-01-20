@@ -22,13 +22,13 @@ struct SearchTextField: View {
     var placeholder: String = "Search..."
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 3, style: .continuous)
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .fill(Color.white)
-//                .frame(width: 200, height: 22)
+            //                .frame(width: 200, height: 22)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 3, style: .continuous)
-                        .stroke(isFocused ? Color.red.opacity(0.7) : Color.gray.opacity(0.4), lineWidth: isFocused ? 2 : 1)
-//                        .frame(width: 200, height: 21)
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .stroke(isFocused ? Color.blue.opacity(0.7) : Color.gray.opacity(0.4), lineWidth: isFocused ? 2 : 1)
+                    //                        .frame(width: 200, height: 21)
                 )
                 .padding(1)
 
@@ -46,9 +46,7 @@ struct SearchTextField: View {
                     }
                 })
                     .textFieldStyle(PlainTextFieldStyle())
-//                    .keyboardShortcut(KeyEquivalent("l"), modifiers: .command)
-//                    .focused($isFocused)
-//                    .keyboardShortcut(.return)
+
                 if query != "" {
                     Button(action: {
                         self.query = ""

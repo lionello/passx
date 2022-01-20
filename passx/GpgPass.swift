@@ -8,7 +8,7 @@
 import Foundation
 
 class GpgPass : PassProtocol {
-
+    
     func query(_ query: String) throws -> [String] {
         throw PassError.notImplemented
     }
@@ -25,24 +25,26 @@ class GpgPass : PassProtocol {
         self.store = store
     }
     
-    func getLogin(entry: String) throws -> String? {
+    func getLogin(entry: String, field: PassField) throws -> String? {
         let task = Process()
         task.executableURL = URL(fileURLWithPath: self.gpg)
         let outputPipe = Pipe()
         task.standardOutput = outputPipe
         let errorPipe = Pipe()
         task.standardError = errorPipe
-
+        
         let path = NSString.path(withComponents: [self.store, entry]) + ".gpg"
         task.arguments = ["-d", path]
-
+        
         try task.run()
         task.waitUntilExit()
         
         if task.terminationStatus != 0 {
             throw PassError.err(msg: try errorPipe.readUtf8())
         }
-        if let pw = try outputPipe.readUtf8()?.split(separator: "\n").first {
+
+        let lines = try outputPipe.readUtf8()?.split(separator: "\n")
+        if let pw = lines?.first(where: { $0.lowercased().starts(with: field.prefix())}) {
             return String(pw)
         }
         return nil
@@ -50,7 +52,7 @@ class GpgPass : PassProtocol {
 }
 
 extension Pipe {
-
+    
     func readUtf8() throws -> String? {
         guard let data = try self.fileHandleForReading.readToEnd() else {
             return nil

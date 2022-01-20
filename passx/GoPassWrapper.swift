@@ -16,27 +16,27 @@ class GoPassWrapper : PassProtocol {
         self.wrapper = wrapper
     }
     
-    func getLogin(entry: String) throws -> String? {
+    func getLogin(entry: String, field: PassField) throws -> String? {
         let json: [String:String]  = [
-             "type": "getLogin",
-             "entry": entry,
+            "type": "getLogin",
+            "entry": entry,
         ]
         let map = try invokeJsonApi(json) as! [String:Any]
-        return map["password"] as? String
+        return map[field.rawValue] as? String
     }
     
     func query(_ query: String) throws -> [String] {
         let json: [String:String]  = [
-             "type": "query",
-             "query": query,
+            "type": "query",
+            "query": query,
         ]
         return try invokeJsonApi(json) as! [String]
     }
     
     func queryHost(_ host: String) throws -> [String] {
         let json: [String:String]  = [
-             "type": "queryHost",
-             "host": host,
+            "type": "queryHost",
+            "host": host,
         ]
         return try invokeJsonApi(json) as! [String]
     }
@@ -53,7 +53,7 @@ class GoPassWrapper : PassProtocol {
         
         let data = try JSONSerialization.data(withJSONObject: json, options: [])
         try inputPipe.fileHandleForWriting.write(contentsOf: data.nativeMessage())
-
+        
         try task.run()
         task.waitUntilExit()
         
@@ -65,14 +65,14 @@ class GoPassWrapper : PassProtocol {
 }
 
 extension Data {
-
+    
     init(nativeMessage: Data) {
         let size = nativeMessage.withUnsafeBytes {
             $0.load(as: Int32.self)
         }
         self.init(nativeMessage[4..<4+size])
     }
-
+    
     func nativeMessage() -> Data {
         let prefix = Swift.withUnsafeBytes(of: Int32(self.count)) { Data($0) }
         return prefix + self
@@ -80,7 +80,7 @@ extension Data {
 }
 
 extension Pipe {
-
+    
     func readNativeMessage() throws -> Data? {
         guard let data = try self.fileHandleForReading.readToEnd() else {
             return nil

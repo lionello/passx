@@ -16,15 +16,15 @@ extension KeyboardShortcuts.Name {
 }
 
 class AppDelegate: NSObject, NSApplicationDelegate {
-
+    
     static let HOME = ProcessInfo.processInfo.environment["HOME"]!
-
+    
     var newEntryPanel: FloatingPanel!
     var pass: PassProtocol!
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         pass = GoPassWrapper(wrapper: "\(AppDelegate.HOME)/.config/gopass/gopass_wrapper.sh")
-
+        
         createFloatingPanel()
         
         // Center doesn't place it in the absolute center, see the documentation for more details
@@ -32,7 +32,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         // Shows the panel and makes it active
         newEntryPanel.makeKeyAndOrderFront(nil)
-
+        
         KeyboardShortcuts.onKeyUp(for: .showFloatingPanel, action: {
             self.newEntryPanel.makeKeyAndOrderFront(nil)
         })

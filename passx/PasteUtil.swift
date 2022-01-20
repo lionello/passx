@@ -16,13 +16,13 @@ class PasteUtil {
     static func paste(vk: CGKeyCode, flags: CGEventFlags = CGEventFlags(rawValue: 0)) {
         let event1 = CGEvent(keyboardEventSource: nil, virtualKey: vk, keyDown: true)
         event1?.flags = flags
-//        event1?.flags = .maskNonCoalesced
-//        event1?.keyboardSetUnicodeString(stringLength: utf16Chars.count, unicodeString: utf16Chars)
+        //        event1?.flags = .maskNonCoalesced
+        //        event1?.keyboardSetUnicodeString(stringLength: utf16Chars.count, unicodeString: utf16Chars)
         event1?.post(tap: .cghidEventTap)
 
         let event2 = CGEvent(keyboardEventSource: nil, virtualKey: vk, keyDown: false)
         event1?.flags = flags
-//        event2?.flags = .maskNonCoalesced
+        //        event2?.flags = .maskNonCoalesced
         event2?.post(tap: .cghidEventTap)
     }
 

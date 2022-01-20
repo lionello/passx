@@ -14,17 +14,14 @@ enum Focusable: Hashable {
 
 struct ContentView: View {
     let myWindow: NSWindow?
-
+    
     @State private var lastResult: [String] = []
-
-//    @State
-//    private var opt: Int = -1
-
+    
     @State
     private var query: String = "zc.qq.com"
-
+    
     @FocusState private var focusField: Focusable?
-
+    
     var body: some View {
         VStack {
             SearchTextField(query: $query)
@@ -56,15 +53,15 @@ struct ContentView: View {
                     }
                 }
                 .onSubmit {
-                    submitPassword(query)
+                    submit(query)
                 }
                 .focused($focusField, equals: .query)
                 .onAppear {
-                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                         focusField = .query//.wrappedValue = true
-                     }
-                 }
-
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        focusField = .query//.wrappedValue = true
+                    }
+                }
+            
             let binding = Binding<String?>(
                 get: { self.query },
                 set: { self.query = $0 ?? "" }
@@ -76,39 +73,38 @@ struct ContentView: View {
                         let username = String(str[str.index(after: slash)...])
                         Text(String(str[path]))
                         Button(username) {
-                            submitText(username)
+                            submit(text: username)
                         }
                     } else {
                         Text(str)
                     }
                     Button("●●●") {
-                        submitPassword(str)
+                        submit(str)
                     }
+                    Menu("...") {
+                        Button("Username") {
+                            submit(str, field: .username)
+                        }
+                    }
+                    .menuIndicator(.hidden)
+                    .fixedSize()
                 }
                 .focused($focusField, equals: .result(id: str))
             }
-//            .onMoveCommand { (direction) in
-//                switch direction {
-//                case .down:
-//                    self.opt += 1
-//                case .up:
-//                    self.opt += 1
-//                }
-//            }
         }
     }
-
+    
     func submitAndClose(_ text: String) throws {
         let keys = try PasteUtil.stringToKeyCodes(text)
         DispatchQueue.main.async {
             self.myWindow?.close()
             NSApplication.shared.hide(nil)
-
+            
             PasteUtil.paste(keys: keys)
         }
     }
-
-    func submitText(_ text: String) {
+    
+    func submit(text: String) {
         do {
             print("submit text \(text)")
             try submitAndClose(text)
@@ -116,11 +112,11 @@ struct ContentView: View {
             // TODO: show an error message
         }
     }
-
-    func submitPassword(_ entry: String) {
+    
+    func submit(_ entry: String, field: PassField = .password) {
         do {
-            print("submit entry \(entry)")
-            if let pw = try (NSApplication.shared.delegate as! AppDelegate).pass.getLogin(entry: entry) {
+            print("submit entry \(entry), field \(field)")
+            if let pw = try (NSApplication.shared.delegate as! AppDelegate).pass.getLogin(entry: entry, field: field) {
                 try submitAndClose(pw)
             }
         } catch {
