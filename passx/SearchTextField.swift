@@ -47,6 +47,7 @@ struct SearchTextField: View {
                 })
                     .textFieldStyle(PlainTextFieldStyle())
 
+
                 if query != "" {
                     Button(action: {
                         self.query = ""

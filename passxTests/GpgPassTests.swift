@@ -13,7 +13,7 @@ class GpgPassTests: XCTestCase {
     let pass = GpgPass(gpg: "\(AppDelegate.HOME)/.nix-profile/bin/gpg", store: "\(AppDelegate.HOME)/.password-store")
 
     func testGpgPassLogin() throws {
-        let pw = try pass.getLogin(entry: test)
+        let pw = try pass.getLogin(entry: test, field: .password)
         XCTAssertNotEqual(pw!, "")
     }
 

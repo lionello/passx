@@ -13,7 +13,7 @@ class GoPassWrapperTests: XCTestCase {
     let pass = GoPassWrapper(wrapper: "\(AppDelegate.HOME)/.config/gopass/gopass_wrapper.sh")
 
     func testGoPassLogin() throws {
-        let pw = try pass.getLogin(entry: test)
+        let pw = try pass.getLogin(entry: test, field: .password)
         XCTAssertNotEqual(pw!, "")
     }
 

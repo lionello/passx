@@ -13,15 +13,39 @@ enum Focusable: Hashable {
 }
 
 struct ContentView: View {
+    let pass: PassProtocol?
     let myWindow: NSWindow?
-    
+
     @State private var lastResult: [String] = []
     
     @State
     private var query: String = "zc.qq.com"
+
+    @State
+    private var prev: String = ""
     
     @FocusState private var focusField: Focusable?
     
+    fileprivate func updateQuery(_ text: String) -> String? {
+        debugPrint("text ", text)
+        debugPrint("prev ", prev)
+        if text.count <= 1 || self.prev.count >= text.count {
+            self.prev = text
+            return nil
+        }
+        let result = self.lastResult.first(where: { $0.starts(with: text) })
+        debugPrint("result ", result ?? "nil")
+        do {
+            if let result =  try pass?.query(text) {
+                // TODO: sort by LRU
+                self.lastResult = result
+            }
+        } catch {
+            // ignore
+        }
+        return result
+    }
+
     var body: some View {
         VStack {
             SearchTextField(query: $query)
@@ -31,24 +55,16 @@ struct ContentView: View {
                         return
                     }
                     let text = textField.string
-                    if text.count <= 1 {
-                        return
-                    }
-                    if let result = self.lastResult.first(where: { $0.starts(with: text) }) {
-                        DispatchQueue.main.async {
-                            self.query = result
+                    if let result = updateQuery(text) {
+                        if result != text {
+                            self.prev = text
                             DispatchQueue.main.async {
+                                textField.string = result
                                 let nsText = result as NSString
                                 let after = nsText.range(of: text).upperBound
                                 let range = NSMakeRange(after, nsText.length - after)
                                 textField.setSelectedRange(range)
                             }
-                        }
-                    } else {
-                        do {
-                            self.lastResult = try (NSApplication.shared.delegate as! AppDelegate).pass.query(text)
-                        } catch {
-                            // ignore
                         }
                     }
                 }
@@ -106,7 +122,7 @@ struct ContentView: View {
     
     func submit(text: String) {
         do {
-            print("submit text \(text)")
+            debugPrint("submit text \(text)")
             try submitAndClose(text)
         } catch {
             // TODO: show an error message
@@ -115,8 +131,8 @@ struct ContentView: View {
     
     func submit(_ entry: String, field: PassField = .password) {
         do {
-            print("submit entry \(entry), field \(field)")
-            if let pw = try (NSApplication.shared.delegate as! AppDelegate).pass.getLogin(entry: entry, field: field) {
+            debugPrint("submit entry \(entry), field \(field)")
+            if let pw = try pass?.getLogin(entry: entry, field: field) {
                 try submitAndClose(pw)
             }
         } catch {
@@ -127,6 +143,6 @@ struct ContentView: View {
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView(myWindow: nil)
+        ContentView(pass: MockPass(), myWindow: nil)
     }
 }
