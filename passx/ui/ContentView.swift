@@ -13,60 +13,44 @@ enum Focusable: Hashable {
 }
 
 struct ContentView: View {
-    let pass: PassProtocol?
-    let myWindow: NSWindow?
-
-    @State private var lastResult: [String] = []
     
-    @State
-    private var query: String = "zc.qq.com"
+    let myWindow: NSWindow?
+    @EnvironmentObject var viewModel: PassViewModel
 
-    @State
-    private var prev: String = ""
+    @State private var query: String = "zc.qq.com"
+    @State private var prev: String = ""
+//    @State private var lastResult: [String]
     
     @FocusState private var focusField: Focusable?
-    
-    fileprivate func updateQuery(_ text: String) -> String? {
-        debugPrint("text ", text)
-        debugPrint("prev ", prev)
-        if text.count <= 1 || self.prev.count >= text.count {
-            self.prev = text
-            return nil
-        }
-        let result = self.lastResult.first(where: { $0.starts(with: text) })
-        debugPrint("result ", result ?? "nil")
-        do {
-            if let result =  try pass?.query(text) {
-                // TODO: sort by LRU
-                self.lastResult = result
-            }
-        } catch {
-            // ignore
-        }
-        return result
-    }
 
     var body: some View {
         VStack {
             SearchTextField(query: $query)
                 .frame(width: 512, height: 30)
+                .onReceive(viewModel.$result) {
+                    self.query = $0
+                }
                 .onReceive(NotificationCenter.default.publisher(for: NSTextView.didChangeNotification)) {
                     guard let textField = $0.object as? NSTextView else {
                         return
                     }
                     let text = textField.string
-                    if let result = updateQuery(text) {
-                        if result != text {
-                            self.prev = text
-                            DispatchQueue.main.async {
-                                textField.string = result
-                                let nsText = result as NSString
-                                let after = nsText.range(of: text).upperBound
-                                let range = NSMakeRange(after, nsText.length - after)
-                                textField.setSelectedRange(range)
-                            }
-                        }
+                    if text.count <= 1 || self.prev.count >= text.count {
+//                        self.prev = text
+                    } else {
+                        viewModel.updateQuery(text)
+//                        if result != text {
+//                            self.prev = text
+//                            DispatchQueue.main.async {
+//                                textField.string = result
+//                                let nsText = result as NSString
+//                                let after = nsText.range(of: text).upperBound
+//                                let range = NSMakeRange(after, nsText.length - after)
+//                                textField.setSelectedRange(range)
+//                            }
+//                        }
                     }
+                    self.prev = text
                 }
                 .onSubmit {
                     submit(query)
@@ -82,7 +66,7 @@ struct ContentView: View {
                 get: { self.query },
                 set: { self.query = $0 ?? "" }
             )
-            List(lastResult, id: \.self, selection: binding) { str in
+            List(viewModel.lastResult, id: \.self, selection: binding) { str in
                 HStack {
                     if let slash = str.lastIndex(of: "/") {
                         let path = ..<slash
@@ -132,7 +116,7 @@ struct ContentView: View {
     func submit(_ entry: String, field: PassField = .password) {
         do {
             debugPrint("submit entry \(entry), field \(field)")
-            if let pw = try pass?.getLogin(entry: entry, field: field) {
+            if let pw = try viewModel.pass.getLogin(entry: entry, field: field) {
                 try submitAndClose(pw)
             }
         } catch {
@@ -143,6 +127,7 @@ struct ContentView: View {
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView(pass: MockPass(), myWindow: nil)
+        ContentView(myWindow: nil)
+            .environmentObject(PassViewModel())
     }
 }

@@ -61,9 +61,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         // Create the SwiftUI view that provides the window contents.
         // I've opted to ignore top safe area as well, since we're hiding the traffic icons
-        let contentView = ContentView(pass: pass, myWindow: newEntryPanel)
+        let contentView = ContentView(myWindow: newEntryPanel)
+            .environmentObject(PassViewModel(pass: pass))
             .edgesIgnoringSafeArea(.top)
-        
+
         newEntryPanel.title = "Pass Search"
         newEntryPanel.contentView = NSHostingView(rootView: contentView)
     }
