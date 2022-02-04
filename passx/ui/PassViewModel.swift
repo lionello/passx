@@ -29,8 +29,8 @@ final class PassViewModel : ObservableObject {
             return
         }
 
-        let existingSuggestion = PassViewModel.findSuggestion(text: text, entries: self.entries)
-        self.suggestion = existingSuggestion
+        guard !self.entries.contains(text) else { return }
+        let suggested = setSuggestion(text, entries: self.entries)
 
         task = Task(priority: .userInitiated) {
             // TODO: sort by LRU to ensure last used ones are shown first
@@ -38,10 +38,19 @@ final class PassViewModel : ObservableObject {
             guard !Task.isCancelled else { return }
             
             self.entries = result
-            if existingSuggestion == nil {
-                self.suggestion = PassViewModel.findSuggestion(text: text, entries: result)
+            if !suggested {
+                guard !result.contains(text) else { return }
+                _ = setSuggestion(text, entries: result)
             }
         }
+    }
+
+    private func setSuggestion(_ text: String, entries: [String]) -> Bool {
+        guard let existingSuggestion = PassViewModel.findSuggestion(text: text, entries: entries) else {
+            return false
+        }
+        self.suggestion = existingSuggestion
+        return true
     }
 
     // Assuming `entries` is sorted by popularity, returns the best suggestion for `text`

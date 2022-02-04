@@ -109,7 +109,7 @@ struct ContentView: View {
     
     func submit(text: String) {
         do {
-            debugPrint("submit text \(text)")
+            debugPrint("submit text", text)
             try submitAndClose(text)
         } catch {
             // TODO: show an error message
@@ -118,7 +118,7 @@ struct ContentView: View {
     
     func submit(_ entry: String, field: PassField = .password) {
         do {
-            debugPrint("submit entry \(entry), field \(field)")
+            debugPrint("submit entry", entry, "field", field)
             if let pw = try viewModel.pass.getLogin(entry: entry, field: field) {
                 try submitAndClose(pw)
             }
