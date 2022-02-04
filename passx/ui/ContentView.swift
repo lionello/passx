@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Introspect
 
 enum Focusable: Hashable {
     case query
@@ -17,56 +18,48 @@ struct ContentView: View {
     let myWindow: NSWindow?
     @EnvironmentObject var viewModel: PassViewModel
 
-    @State private var query: String = "zc.qq.com"
-    @State private var prev: String = ""
-//    @State private var lastResult: [String]
-    
+    @State private var input: String = "zc.qq.com"
+    @State private var textView: NSTextView!
+    @State private var textField: NSTextField!
+
     @FocusState private var focusField: Focusable?
 
     var body: some View {
         VStack {
-            SearchTextField(query: $query)
-                .frame(width: 512, height: 30)
-                .onReceive(viewModel.$result) {
-                    self.query = $0
+            SearchTextField(query: $input)
+                .introspectTextView {
+                    self.textView = $0
                 }
-                .onReceive(NotificationCenter.default.publisher(for: NSTextView.didChangeNotification)) {
-                    guard let textField = $0.object as? NSTextView else {
-                        return
+                .introspectTextField {
+                    self.textField = $0
+                }
+                .onChange(of: input) { newValue in
+                    self.viewModel.autocomplete(newValue)
+                }
+                .frame(width: 512, height: 30)
+                .onReceive(viewModel.$suggestion) {
+                    if let result = $0 {
+                        // Only replace the current query if the suggestion is longer than the query
+                        if result.count > self.input.count && result.hasPrefix(self.input) {
+                            setSuggestion(result)
+                        }
                     }
-                    let text = textField.string
-                    if text.count <= 1 || self.prev.count >= text.count {
-//                        self.prev = text
-                    } else {
-                        viewModel.updateQuery(text)
-//                        if result != text {
-//                            self.prev = text
-//                            DispatchQueue.main.async {
-//                                textField.string = result
-//                                let nsText = result as NSString
-//                                let after = nsText.range(of: text).upperBound
-//                                let range = NSMakeRange(after, nsText.length - after)
-//                                textField.setSelectedRange(range)
-//                            }
-//                        }
-                    }
-                    self.prev = text
                 }
                 .onSubmit {
-                    submit(query)
+                    submit(input)
                 }
                 .focused($focusField, equals: .query)
                 .onAppear {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        focusField = .query//.wrappedValue = true
+                        focusField = .query
                     }
                 }
             
             let binding = Binding<String?>(
-                get: { self.query },
-                set: { self.query = $0 ?? "" }
+                get: { self.input },
+                set: { self.input = $0 ?? "" }
             )
-            List(viewModel.lastResult, id: \.self, selection: binding) { str in
+            List(viewModel.entries, id: \.self, selection: binding) { str in
                 HStack {
                     if let slash = str.lastIndex(of: "/") {
                         let path = ..<slash
@@ -93,6 +86,16 @@ struct ContentView: View {
             }
         }
     }
+
+    private func setSuggestion(_ result: String) {
+//        textView.string = result
+        textField.stringValue = result
+        let nsText = result as NSString
+        let after = nsText.range(of: self.input).upperBound
+        let range = NSMakeRange(after, nsText.length - after)
+//        textView.setSelectedRange(range)
+        textField.currentEditor()?.selectedRange = range
+    }
     
     func submitAndClose(_ text: String) throws {
         let keys = try PasteUtil.stringToKeyCodes(text)
@@ -106,7 +109,7 @@ struct ContentView: View {
     
     func submit(text: String) {
         do {
-            debugPrint("submit text \(text)")
+            debugPrint("submit text", text)
             try submitAndClose(text)
         } catch {
             // TODO: show an error message
@@ -115,7 +118,7 @@ struct ContentView: View {
     
     func submit(_ entry: String, field: PassField = .password) {
         do {
-            debugPrint("submit entry \(entry), field \(field)")
+            debugPrint("submit entry", entry, "field", field)
             if let pw = try viewModel.pass.getLogin(entry: entry, field: field) {
                 try submitAndClose(pw)
             }
@@ -128,6 +131,6 @@ struct ContentView: View {
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView(myWindow: nil)
-            .environmentObject(PassViewModel())
+            .environmentObject(PassViewModel(pass: MockPass()))
     }
 }

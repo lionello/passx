@@ -23,7 +23,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var pass: PassProtocol!
     var popover: NSPopover!
 
-    func applicationDidFinishLaunching(_ notification: Notification) {
+    @MainActor func applicationDidFinishLaunching(_ notification: Notification) {
         // FIXME: make this configurable
         pass = GoPassWrapper(wrapper: "\(AppDelegate.HOME)/.config/gopass/gopass_wrapper.sh")
         
@@ -55,7 +55,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 //      return menu
 //    }
 
-    private func createFloatingPanel() {
+    @MainActor private func createFloatingPanel() {
         // Create the window and set the content view.
         newEntryPanel = FloatingPanel(contentRect: NSRect(x: 0, y: 0, width: 512, height: 200), backing: .buffered, defer: false)
         
