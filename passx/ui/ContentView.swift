@@ -18,7 +18,7 @@ struct ContentView: View {
     let myWindow: NSWindow?
     @EnvironmentObject var viewModel: PassViewModel
 
-    @State private var input: String = "zc.qq.com"
+    @State private var input: String = ""
     @State private var textView: NSTextView!
     @State private var textField: NSTextField!
 
@@ -33,7 +33,8 @@ struct ContentView: View {
                 .introspectTextField {
                     self.textField = $0
                 }
-                .onChange(of: input) { newValue in
+                .onChange(of: input) { [input] newValue in
+                    guard !ContentView.isDelete(old: input, new: newValue) else { return }
                     self.viewModel.autocomplete(newValue)
                 }
                 .frame(width: 512, height: 30)
@@ -46,7 +47,7 @@ struct ContentView: View {
                     }
                 }
                 .onSubmit {
-                    submit(input)
+                    submit(textField.stringValue)
                 }
                 .focused($focusField, equals: .query)
                 .onAppear {
@@ -69,7 +70,9 @@ struct ContentView: View {
                             submit(text: username)
                         }
                     } else {
-                        Text(str)
+                        Button(str) {
+                            submit(text: str)
+                        }
                     }
                     Button("●●●") {
                         submit(str)
@@ -85,6 +88,11 @@ struct ContentView: View {
                 .focused($focusField, equals: .result(id: str))
             }
         }
+    }
+
+    private static func isDelete(old: String, new: String) -> Bool {
+        debugPrint("old", old, "new", new)
+        return old.hasPrefix(new) && new.count < old.count
     }
 
     private func setSuggestion(_ result: String) {

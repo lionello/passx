@@ -36,12 +36,14 @@ class PassViewModelTests : XCTestCase {
         XCTAssertEqual(vm.suggestion, "user")
     }
 
-//    @MainActor func testNoSuggestionOnBackspace() throws {
-//        let vm = PassViewModel(pass: mockPass)
-//        vm.autocomplete("mock")
-//        vm.autocomplete("moc")
-//
-//    }
+    @MainActor func testNoSuggestionOnBackspace() throws {
+        let vm = PassViewModel(pass: mockPass)
+        vm.autocomplete("mock")
+        let suggestion = try self.awaitPublisher(vm.$suggestion.dropFirst().first())
+        XCTAssertEqual(suggestion, "mock/user")
+        vm.autocomplete("moc")
+        XCTAssertNil(vm.suggestion)
+    }
 
     @MainActor func testNoRefreshOnAcceptingSuggestion() throws {
         let vm = PassViewModel(pass: mockPass)
