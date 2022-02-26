@@ -19,10 +19,20 @@ struct ContentView: View {
     @EnvironmentObject var viewModel: PassViewModel
 
     @State private var input: String = ""
-    @State private var textView: NSTextView!
-    @State private var textField: NSTextField!
+    @State private var textField: NSTextField?
+    @State private var textView: NSTextView? // in case we end up with a TextView
 
     @FocusState private var focusField: Focusable?
+
+    var uiString: String {
+        get {
+            return textField?.stringValue ?? textView?.string ?? ""
+        }
+        set(result) {
+            textView?.string = result
+            textField?.stringValue = result
+        }
+    }
 
     var body: some View {
         VStack {
@@ -47,7 +57,7 @@ struct ContentView: View {
                     }
                 }
                 .onSubmit {
-                    submit(textField.stringValue)
+                    submit(self.uiString, addReturn: true)
                 }
                 .focused($focusField, equals: .query)
                 .onAppear {
@@ -57,7 +67,7 @@ struct ContentView: View {
                 }
             
             let binding = Binding<String?>(
-                get: { self.input },
+                get: { self.uiString },
                 set: { self.input = $0 ?? "" }
             )
             List(viewModel.entries, id: \.self, selection: binding) { str in
@@ -96,17 +106,15 @@ struct ContentView: View {
     }
 
     private func setSuggestion(_ result: String) {
-//        textView.string = result
-        textField.stringValue = result
         let nsText = result as NSString
         let after = nsText.range(of: self.input).upperBound
         let range = NSMakeRange(after, nsText.length - after)
-//        textView.setSelectedRange(range)
-        textField.currentEditor()?.selectedRange = range
+        textView?.setSelectedRange(range)
+        textField?.currentEditor()?.selectedRange = range
     }
     
-    func submitAndClose(_ text: String) throws {
-        let keys = try PasteUtil.stringToKeyCodes(text)
+    func submitAndClose(_ text: String, addReturn: Bool = false) throws {
+        let keys = try PasteUtil.stringToKeyCodes(text + (addReturn ? "\r" : ""))
         DispatchQueue.main.async {
             self.myWindow?.close()
             NSApplication.shared.hide(nil)
@@ -124,11 +132,11 @@ struct ContentView: View {
         }
     }
     
-    func submit(_ entry: String, field: PassField = .password) {
+    func submit(_ entry: String, field: PassField = .password, addReturn: Bool = false) {
         do {
             debugPrint("submit entry", entry, "field", field)
             if let pw = try viewModel.pass.getLogin(entry: entry, field: field) {
-                try submitAndClose(pw)
+                try submitAndClose(pw, addReturn: addReturn)
             }
         } catch {
             // TODO: show an error message

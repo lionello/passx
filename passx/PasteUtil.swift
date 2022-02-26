@@ -16,13 +16,10 @@ class PasteUtil {
     static func paste(vk: CGKeyCode, flags: CGEventFlags = CGEventFlags(rawValue: 0)) {
         let event1 = CGEvent(keyboardEventSource: nil, virtualKey: vk, keyDown: true)
         event1?.flags = flags
-        //        event1?.flags = .maskNonCoalesced
-        //        event1?.keyboardSetUnicodeString(stringLength: utf16Chars.count, unicodeString: utf16Chars)
         event1?.post(tap: .cghidEventTap)
 
         let event2 = CGEvent(keyboardEventSource: nil, virtualKey: vk, keyDown: false)
         event1?.flags = flags
-        //        event2?.flags = .maskNonCoalesced
         event2?.post(tap: .cghidEventTap)
     }
 
@@ -43,6 +40,7 @@ class PasteUtil {
 
     static func paste(str: String) {
         let utf16Chars = Array(str.utf16)
+
         let event1 = CGEvent(keyboardEventSource: nil, virtualKey: 0x31, keyDown: true);
         event1?.flags = .maskNonCoalesced
         event1?.keyboardSetUnicodeString(stringLength: utf16Chars.count, unicodeString: utf16Chars)
@@ -53,10 +51,8 @@ class PasteUtil {
         event2?.post(tap: .cghidEventTap)
     }
 
-    private static func keyCodeToString(keyCode: CGKeyCode, eventModifiers: Int) -> String? {
-        let curKeyboard = TISCopyCurrentKeyboardInputSource().takeRetainedValue()
-        let rawLayoutData = TISGetInputSourceProperty(curKeyboard, kTISPropertyUnicodeKeyLayoutData)
-        let layoutData      = unsafeBitCast(rawLayoutData, to: CFData.self)
+    private static func keyCodeToString(_ inputSource: TISInputSource, keyCode: CGKeyCode, eventModifiers: Int) -> String? {
+        guard let layoutData = inputSource.getProperty(kTISPropertyUnicodeKeyLayoutData) as! CFData? else { return nil }
         let keyboardLayoutPtr = unsafeBitCast(CFDataGetBytePtr(layoutData), to: UnsafePointer<UCKeyboardLayout>.self)
 
         var deadKeyState: UInt32 = 0
@@ -68,12 +64,11 @@ class PasteUtil {
                                     UInt16(kUCKeyActionDown),
                                     UInt32(eventModifiers >> 8), // from UCKeyTranslate doc
                                     UInt32(LMGetKbdType()),
-                                    0,
+                                    0, // kUCKeyTranslateNoDeadKeysMask,
                                     &deadKeyState,
                                     unicodeString.count,
                                     &actualStringLength,
                                     &unicodeString)
-
         if status != noErr {
             return nil
         }
@@ -85,21 +80,38 @@ class PasteUtil {
         var flags: CGEventFlags
     }
 
+    private static var curKeyboardID: String = ""
     private static var dict: [String: KeyCode] = [:]
 
     private static func charToKeyCode(ch: Character) -> KeyCode? {
-        if dict.isEmpty {
+        let curKeyboard = TISCopyCurrentKeyboardInputSource().takeRetainedValue()
+        if curKeyboardID != curKeyboard.id {
+            curKeyboardID = curKeyboard.id
             // For every keyCode, find the character(s) with and without SHIFT
             for i in 0..<128 {
                 let keyCode = CGKeyCode(i)
-                if let str = keyCodeToString(keyCode: keyCode, eventModifiers: 0) {
-                    dict[str] = KeyCode(vk: keyCode, flags: CGEventFlags(rawValue: 0))
-                }
-                if let str = keyCodeToString(keyCode: keyCode, eventModifiers: shiftKey) {
+                if let str = keyCodeToString(curKeyboard, keyCode: keyCode, eventModifiers: shiftKey) {
                     dict[str] = KeyCode(vk: keyCode, flags: .maskShift)
+                }
+                if let str = keyCodeToString(curKeyboard, keyCode: keyCode, eventModifiers: 0) {
+                    dict[str] = KeyCode(vk: keyCode, flags: CGEventFlags(rawValue: 0))
                 }
             }
         }
         return dict[String(ch)]
     }
+}
+
+// Excerpt from https://github.com/creasty/Keyboard/blob/master/keyboard/Extensions/TISInputSource.swift
+extension TISInputSource {
+
+    func getProperty(_ key: CFString) -> AnyObject? {
+        guard let cfType = TISGetInputSourceProperty(self, key) else { return nil }
+        return Unmanaged<AnyObject>.fromOpaque(cfType).takeUnretainedValue()
+    }
+
+    var id: String {
+        return getProperty(kTISPropertyInputSourceID) as! String
+    }
+
 }
