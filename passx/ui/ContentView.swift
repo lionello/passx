@@ -28,10 +28,6 @@ struct ContentView: View {
         get {
             return textField?.stringValue ?? textView?.string ?? ""
         }
-        set(result) {
-            textView?.string = result
-            textField?.stringValue = result
-        }
     }
 
     var body: some View {
@@ -57,12 +53,19 @@ struct ContentView: View {
                     }
                 }
                 .onSubmit {
-                    submit(self.uiString, addReturn: true)
+                    if let suggestion = viewModel.entries.singleOrNil() {
+                        setSuggestion(suggestion)
+                        submit(suggestion, addReturn: true)
+                    } else {
+                        submit(uiString, addReturn: true)
+                    }
                 }
                 .focused($focusField, equals: .query)
                 .onAppear {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                         focusField = .query
+                        textView?.selectAll(self)
+                        textField?.currentEditor()?.selectAll(self)
                     }
                 }
             
@@ -106,6 +109,8 @@ struct ContentView: View {
     }
 
     private func setSuggestion(_ result: String) {
+        textView?.string = result
+        textField?.stringValue = result
         let nsText = result as NSString
         let after = nsText.range(of: self.input).upperBound
         let range = NSMakeRange(after, nsText.length - after)
@@ -148,5 +153,11 @@ struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView(myWindow: nil)
             .environmentObject(PassViewModel(pass: MockPass()))
+    }
+}
+
+extension Array {
+    func singleOrNil() -> Element? {
+        return count == 1 ? self[0] : nil
     }
 }
