@@ -54,21 +54,19 @@ struct ContentView: View {
                 }
                 .onSubmit {
                     if let suggestion = viewModel.entries.singleOrNil() {
-                        setSuggestion(suggestion)
-                        submit(suggestion, addReturn: true)
+                        submit(entry: suggestion, addReturn: true)
                     } else {
-                        submit(uiString, addReturn: true)
+                        submit(entry: uiString, addReturn: true)
                     }
                 }
                 .focused($focusField, equals: .query)
                 .onAppear {
+                    debugPrint("onAppear")
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        focusField = .query
-                        textView?.selectAll(self)
-                        textField?.currentEditor()?.selectAll(self)
+                        focusQuery()
                     }
                 }
-            
+
             let binding = Binding<String?>(
                 get: { self.uiString },
                 set: { self.input = $0 ?? "" }
@@ -80,19 +78,24 @@ struct ContentView: View {
                         let username = String(str[str.index(after: slash)...])
                         Text(String(str[path]))
                         Button(username) {
+                            setText(str)
                             submit(text: username)
                         }
                     } else {
                         Button(str) {
+                            setText(str)
                             submit(text: str)
                         }
                     }
                     Button("●●●") {
-                        submit(str)
+                        submit(entry: str)
                     }
                     Menu("...") {
                         Button("Username") {
-                            submit(str, field: .username)
+                            submit(entry: str, field: .username)
+                        }
+                        Button("TOTP") {
+                            submit(entry: str, field: .current_totp)
                         }
                     }
                     .menuIndicator(.hidden)
@@ -108,18 +111,29 @@ struct ContentView: View {
         return old.hasPrefix(new) && new.count < old.count
     }
 
+    private func setText(_ text: String) {
+        textView?.string = text
+        textField?.stringValue = text
+    }
+
     private func setSuggestion(_ result: String) {
-        textView?.string = result
-        textField?.stringValue = result
+        setText(result)
         let nsText = result as NSString
         let after = nsText.range(of: self.input).upperBound
         let range = NSMakeRange(after, nsText.length - after)
         textView?.setSelectedRange(range)
         textField?.currentEditor()?.selectedRange = range
     }
+
+    private func focusQuery() {
+        focusField = .query
+        textView?.selectAll(self)
+        textField?.currentEditor()?.selectAll(self)
+    }
     
     func submitAndClose(_ text: String, addReturn: Bool = false) throws {
         let keys = try PasteUtil.stringToKeyCodes(text + (addReturn ? "\r" : ""))
+        focusQuery()
         DispatchQueue.main.async {
             self.myWindow?.close()
             NSApplication.shared.hide(nil)
@@ -134,17 +148,20 @@ struct ContentView: View {
             try submitAndClose(text)
         } catch {
             // TODO: show an error message
+            debugPrint(error.localizedDescription)
         }
     }
     
-    func submit(_ entry: String, field: PassField = .password, addReturn: Bool = false) {
+    func submit(entry: String, field: PassField = .password, addReturn: Bool = false) {
         do {
             debugPrint("submit entry", entry, "field", field)
             if let pw = try viewModel.pass.getLogin(entry: entry, field: field) {
+                setText(entry)
                 try submitAndClose(pw, addReturn: addReturn)
             }
         } catch {
             // TODO: show an error message
+            debugPrint(error.localizedDescription)
         }
     }
 }

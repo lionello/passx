@@ -15,7 +15,7 @@ enum PassError: Error {
 enum PassField : String {
     case password
     case username
-    case otpauth
+    case current_totp
     case url
 
     func prefix() -> String {

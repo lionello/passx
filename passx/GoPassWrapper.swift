@@ -18,13 +18,13 @@ class GoPassWrapper : PassProtocol {
     
     func getLogin(entry: String, field: PassField) throws -> String? {
         let json: [String:String]  = [
-            "type": "getLogin",
+            "type": field == .password || field == .username ? "getLogin" : "getData",
             "entry": entry,
         ]
         let map = try invokeJsonApi(json) as! [String:Any]
         return map[field.rawValue] as? String
     }
-    
+
     func query(_ query: String) throws -> [String] {
         let json: [String:String]  = [
             "type": "query",
