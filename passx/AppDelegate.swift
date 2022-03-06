@@ -30,7 +30,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         createFloatingPanel()
         
         // Center doesn't place it in the absolute center, see the documentation for more details
-        newEntryPanel.center()
+//        newEntryPanel.center() no: using setFrameAutosaveName
         
         // Shows the panel and makes it active
         newEntryPanel.makeKeyAndOrderFront(nil)
@@ -58,12 +58,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @MainActor private func createFloatingPanel() {
         // Create the window and set the content view.
         newEntryPanel = FloatingPanel(contentRect: NSRect(x: 0, y: 0, width: 512, height: 200), backing: .buffered, defer: false)
-        
+
         // Create the SwiftUI view that provides the window contents.
         // I've opted to ignore top safe area as well, since we're hiding the traffic icons
         let contentView = ContentView(myWindow: newEntryPanel)
-            .environmentObject(PassViewModel(pass: pass))
             .edgesIgnoringSafeArea(.top)
+            .environmentObject(PassViewModel(pass: pass))
 
         newEntryPanel.title = "Pass Search"
         newEntryPanel.contentView = NSHostingView(rootView: contentView)
