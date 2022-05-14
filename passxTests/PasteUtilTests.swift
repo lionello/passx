@@ -10,7 +10,7 @@ import XCTest
 
 class PasteUtilTests: XCTestCase {
 
-    func testExample() throws {
+    func testTabReturn() throws {
         // FIXME: this test fails if an IME is active
         XCTAssertEqual([PasteUtil.KeyCode(vk: 48, flags: []), PasteUtil.KeyCode(vk: 36, flags: [])], try PasteUtil.stringToKeyCodes("\t\r"))
     }
