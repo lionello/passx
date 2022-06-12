@@ -13,12 +13,13 @@ final class PassViewModel : ObservableObject {
     let pass: PassProtocol
 
     @Published private(set) var suggestion: String?
-    @Published private(set) var entries = [String]()
+    @Published private(set) var entries: [String]
 
     private var task: Task<Void, Error>?
 
-    init(pass: PassProtocol) {
+    init(pass: PassProtocol, entries: [String] = []) {
         self.pass = pass
+        self.entries = entries
     }
 
     func autocomplete(_ text: String) {

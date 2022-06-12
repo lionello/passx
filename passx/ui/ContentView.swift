@@ -169,7 +169,11 @@ struct ContentView: View {
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView(myWindow: nil)
-            .environmentObject(PassViewModel(pass: MockPass()))
+            .environmentObject(PassViewModel(pass: MockPass(), entries: ["a/b"]))
+
+        ContentView(myWindow: nil)
+            .preferredColorScheme(.dark)
+            .environmentObject(PassViewModel(pass: MockPass(), entries: ["a"]))
     }
 }
 
