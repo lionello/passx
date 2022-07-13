@@ -54,9 +54,9 @@ struct ContentView: View {
                 }
                 .onSubmit {
                     if let suggestion = viewModel.entries.singleOrNil() {
-                        submit(entry: suggestion, addReturn: true)
+                        submitPassword(entry: suggestion, addReturn: true, copyTOTP: true)
                     } else {
-                        submit(entry: uiString, addReturn: true)
+                        submitPassword(entry: uiString, addReturn: true, copyTOTP: true)
                     }
                 }
                 .focused($focusField, equals: .query)
@@ -79,23 +79,23 @@ struct ContentView: View {
                         Text(String(str[path]))
                         Button(username) {
                             setText(str)
-                            submit(text: username)
+                            submitAndClose(text: username)
                         }
                     } else {
                         Button(str) {
                             setText(str)
-                            submit(text: str)
+                            submitAndClose(text: str)
                         }
                     }
                     Button("●●●") {
-                        submit(entry: str)
+                        submitAndClose(entry: str, field: .password)
                     }
                     Menu("...") {
                         Button("Username") {
-                            submit(entry: str, field: .username)
+                            submitAndClose(entry: str, field: .username)
                         }
                         Button("TOTP") {
-                            submit(entry: str, field: .current_totp)
+                            submitAndClose(entry: str, field: .current_totp)
                         }
                     }
                     .menuIndicator(.hidden)
@@ -104,6 +104,13 @@ struct ContentView: View {
                 .focused($focusField, equals: .result(id: str))
             }
         }
+    }
+
+    private func submitPassword(entry: String, addReturn: Bool, copyTOTP: Bool) {
+        if copyTOTP {
+            copyToClipboard(entry: entry, field: .current_totp)
+        }
+        submitAndClose(entry: entry, field: .password, addReturn: addReturn)
     }
 
     private static func isDelete(old: String, new: String) -> Bool {
@@ -130,8 +137,28 @@ struct ContentView: View {
         textView?.selectAll(self)
         textField?.currentEditor()?.selectAll(self)
     }
-    
-    func submitAndClose(_ text: String, addReturn: Bool = false) throws {
+
+    private static func copyToClipboard(_ text: String) {
+        NSPasteboard.general.clearContents()
+        if !NSPasteboard.general.setString(text, forType: .string) {
+            debugPrint("NSPasteboard.general.setString failed")
+        }
+    }
+
+    func copyToClipboard(entry: String, field: PassField) {
+        do {
+            debugPrint("copy entry", entry, "field", field)
+            if let text = try viewModel.pass.getLogin(entry: entry, field: field) {
+                ContentView.copyToClipboard(text)
+            }
+        }
+        catch {
+            // TODO: show an error message
+            debugPrint(error.localizedDescription)
+        }
+    }
+
+    private func submitAndClose(_ text: String, addReturn: Bool = false) throws {
         let keys = try PasteUtil.stringToKeyCodes(text + (addReturn ? "\r" : ""))
         focusQuery()
         DispatchQueue.main.async {
@@ -142,7 +169,7 @@ struct ContentView: View {
         }
     }
     
-    func submit(text: String) {
+    func submitAndClose(text: String) {
         do {
             debugPrint("submit text", text)
             try submitAndClose(text)
@@ -152,12 +179,12 @@ struct ContentView: View {
         }
     }
     
-    func submit(entry: String, field: PassField = .password, addReturn: Bool = false) {
+    func submitAndClose(entry: String, field: PassField, addReturn: Bool = false) {
         do {
             debugPrint("submit entry", entry, "field", field)
-            if let pw = try viewModel.pass.getLogin(entry: entry, field: field) {
+            if let text = try viewModel.pass.getLogin(entry: entry, field: field) {
                 setText(entry)
-                try submitAndClose(pw, addReturn: addReturn)
+                try submitAndClose(text, addReturn: addReturn)
             }
         } catch {
             // TODO: show an error message
