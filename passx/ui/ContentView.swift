@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Introspect
+import UserNotifications
 
 enum Focusable: Hashable {
     case query
@@ -107,10 +108,10 @@ struct ContentView: View {
     }
 
     private func submitPassword(entry: String, addReturn: Bool, copyTOTP: Bool) {
+        submitAndClose(entry: entry, field: .password, addReturn: addReturn)
         if copyTOTP {
             copyToClipboard(entry: entry, field: .current_totp)
         }
-        submitAndClose(entry: entry, field: .password, addReturn: addReturn)
     }
 
     private static func isDelete(old: String, new: String) -> Bool {
@@ -118,12 +119,12 @@ struct ContentView: View {
         return old.hasPrefix(new) && new.count < old.count
     }
 
-    private func setText(_ text: String) {
+    private func setText(_ text: String) -> Void {
         textView?.string = text
         textField?.stringValue = text
     }
 
-    private func setSuggestion(_ result: String) {
+    private func setSuggestion(_ result: String) -> Void {
         setText(result)
         let nsText = result as NSString
         let after = nsText.range(of: self.input).upperBound
@@ -132,20 +133,46 @@ struct ContentView: View {
         textField?.currentEditor()?.selectedRange = range
     }
 
-    private func focusQuery() {
+    private func focusQuery() -> Void {
         focusField = .query
         textView?.selectAll(self)
         textField?.currentEditor()?.selectAll(self)
     }
 
-    private static func copyToClipboard(_ text: String) {
+    private static func copyToClipboard(_ text: String) -> Void {
         NSPasteboard.general.clearContents()
-        if !NSPasteboard.general.setString(text, forType: .string) {
+        if NSPasteboard.general.setString(text, forType: .string) {
+            showBanner(title: "Copied to clipboard", body: text)
+        } else {
             debugPrint("NSPasteboard.general.setString failed")
         }
     }
 
-    func copyToClipboard(entry: String, field: PassField) {
+    private static func showBanner(title: String, body: String) -> Void {
+        let notificationCenter = UNUserNotificationCenter.current();
+        notificationCenter.getNotificationSettings { (settings) in
+            if settings.authorizationStatus == .authorized {
+
+                let content = UNMutableNotificationContent();
+                content.title = title;
+                content.body = body;
+
+                let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 0.1, repeats: false);
+
+                let uuidString = UUID().uuidString;
+                let request = UNNotificationRequest(identifier: uuidString, content: content, trigger: trigger);
+
+                // Schedule the request with the system.
+                notificationCenter.add(request) { (error) in
+                    if let error = error {
+                        debugPrint(error.localizedDescription)
+                    }
+                }
+            }
+        }
+    }
+
+    func copyToClipboard(entry: String, field: PassField) -> Void {
         do {
             debugPrint("copy entry", entry, "field", field)
             if let text = try viewModel.pass.getLogin(entry: entry, field: field) {
@@ -169,7 +196,7 @@ struct ContentView: View {
         }
     }
     
-    func submitAndClose(text: String) {
+    func submitAndClose(text: String) -> Void {
         do {
             debugPrint("submit text", text)
             try submitAndClose(text)
@@ -179,7 +206,7 @@ struct ContentView: View {
         }
     }
     
-    func submitAndClose(entry: String, field: PassField, addReturn: Bool = false) {
+    func submitAndClose(entry: String, field: PassField, addReturn: Bool = false) -> Void {
         do {
             debugPrint("submit entry", entry, "field", field)
             if let text = try viewModel.pass.getLogin(entry: entry, field: field) {

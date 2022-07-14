@@ -8,6 +8,7 @@
 import Cocoa
 import SwiftUI
 import KeyboardShortcuts
+import UserNotifications
 
 // From https://www.markusbodner.com/til/2021/02/08/use-global-keyboard-hotkey-to-show/hide-a-window-using-swift/
 extension KeyboardShortcuts.Name {
@@ -46,6 +47,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 //        popover.behavior = .transient
 //        popover.contentViewController = NSHostingController(rootView: newEntryPanel.contentView)
 //        self.popover = popover
+
+        let center = UNUserNotificationCenter.current()
+        center.requestAuthorization(options: [.alert]) { (granted, error) in
+            debugPrint("requestAuthorization -> granted", granted)
+        }
     }
 
 //    func applicationDockMenu(_ sender: NSApplication) -> NSMenu? {
