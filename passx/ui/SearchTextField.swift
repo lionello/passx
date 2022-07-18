@@ -59,7 +59,7 @@ struct SearchTextField: View {
                             .padding(.trailing, 3)
                             .opacity(0.5)
                     }
-                    .buttonStyle(PlainButtonStyle())
+                    .buttonStyle(.plain)
                     .opacity(self.query == "" ? 0 : 0.5)
                 }
             }
