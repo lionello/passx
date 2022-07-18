@@ -33,6 +33,7 @@ final class PassViewModel : ObservableObject {
         guard !self.entries.contains(text) else { return }
         let suggested = setSuggestion(text, entries: self.entries)
 
+        guard text.count > 1 else { return }
         task = Task(priority: .userInitiated) {
             // TODO: sort by LRU to ensure last used ones are shown first
             let result = try self.pass.query(text)
