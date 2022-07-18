@@ -22,7 +22,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     var newEntryPanel: FloatingPanel!
     var pass: PassProtocol!
-    var popover: NSPopover!
+//    var popover: NSPopover!
 
     @MainActor func applicationDidFinishLaunching(_ notification: Notification) {
         // FIXME: make this configurable
