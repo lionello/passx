@@ -32,6 +32,7 @@
 		DDBC5594277C309500544E4D /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBC5593277C309500544E4D /* main.swift */; };
 		DDBC5596277C398700544E4D /* PasteUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBC5595277C398700544E4D /* PasteUtil.swift */; };
 		DDC2087A27C6960E00EAD647 /* PasteUtilTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC2087927C6960E00EAD647 /* PasteUtilTests.swift */; };
+		DDC78FFA2886219200953F5B /* CopyUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC78FF92886219200953F5B /* CopyUtil.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -79,6 +80,7 @@
 		DDBC5593277C309500544E4D /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		DDBC5595277C398700544E4D /* PasteUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteUtil.swift; sourceTree = "<group>"; };
 		DDC2087927C6960E00EAD647 /* PasteUtilTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteUtilTests.swift; sourceTree = "<group>"; };
+		DDC78FF92886219200953F5B /* CopyUtil.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CopyUtil.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -145,6 +147,7 @@
 			children = (
 				DDBC5562277C0C9E00544E4D /* passx.entitlements */,
 				DDBC558E277C27B300544E4D /* AppDelegate.swift */,
+				DDC78FF92886219200953F5B /* CopyUtil.swift */,
 				DD3CBE3627A2591800A8538C /* DebugPrint.swift */,
 				DDBC558A277C185A00544E4D /* GoPassWrapper.swift */,
 				DDBC5588277C184500544E4D /* GpgPass.swift */,
@@ -354,6 +357,7 @@
 				DD3CBE3927A25DD000A8538C /* MockPass.swift in Sources */,
 				DDBC5594277C309500544E4D /* main.swift in Sources */,
 				DDBC5589277C184500544E4D /* GpgPass.swift in Sources */,
+				DDC78FFA2886219200953F5B /* CopyUtil.swift in Sources */,
 				DDBC558D277C269700544E4D /* FloatingPanel.swift in Sources */,
 				DD3CBE3B27A2EDED00A8538C /* PassViewModel.swift in Sources */,
 				DDBC558B277C185A00544E4D /* GoPassWrapper.swift in Sources */,

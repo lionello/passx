@@ -176,7 +176,7 @@ struct ContentView: View {
         do {
             debugPrint("copy entry", entry, "field", field)
             if let text = try viewModel.pass.getLogin(entry: entry, field: field) {
-                ContentView.copyToClipboard(text)
+                _ = CopyUtil.copyToClipboard(text)
             }
         }
         catch {
