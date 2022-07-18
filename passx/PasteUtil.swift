@@ -13,19 +13,24 @@ class PasteUtil {
 
     private init() {}
 
-    static func paste(vk: CGKeyCode, flags: CGEventFlags = CGEventFlags(rawValue: 0)) {
-        let event1 = CGEvent(keyboardEventSource: nil, virtualKey: vk, keyDown: true)
-        event1?.flags = flags
-        event1?.post(tap: .cghidEventTap)
+    static func paste(vk: CGKeyCode, flags: CGEventFlags = CGEventFlags(rawValue: 0)) -> Bool {
+        if let event1 = CGEvent(keyboardEventSource: nil, virtualKey: vk, keyDown: true) {
+            event1.flags = flags
+            event1.post(tap: .cghidEventTap)
 
-        let event2 = CGEvent(keyboardEventSource: nil, virtualKey: vk, keyDown: false)
-        event1?.flags = flags
-        event2?.post(tap: .cghidEventTap)
+            if let event2 = CGEvent(keyboardEventSource: nil, virtualKey: vk, keyDown: false) {
+                event2.flags = flags
+                event2.post(tap: .cghidEventTap)
+            }
+            return true
+        } else {
+            return false
+        }
     }
 
     static func paste(keys: [KeyCode]) {
         keys.forEach {
-            paste(vk: $0.vk, flags: $0.flags)
+            _ = paste(vk: $0.vk, flags: $0.flags)
         }
     }
 
@@ -38,17 +43,22 @@ class PasteUtil {
         }
     }
 
-    static func paste(str: String) {
+    static func paste(str: String) -> Bool {
         let utf16Chars = Array(str.utf16)
 
-        let event1 = CGEvent(keyboardEventSource: nil, virtualKey: 0x31, keyDown: true);
-        event1?.flags = .maskNonCoalesced
-        event1?.keyboardSetUnicodeString(stringLength: utf16Chars.count, unicodeString: utf16Chars)
-        event1?.post(tap: .cghidEventTap)
+        if let event1 = CGEvent(keyboardEventSource: nil, virtualKey: 0x31, keyDown: true) {
+            event1.flags = .maskNonCoalesced
+            event1.keyboardSetUnicodeString(stringLength: utf16Chars.count, unicodeString: utf16Chars)
+            event1.post(tap: .cghidEventTap)
 
-        let event2 = CGEvent(keyboardEventSource: nil, virtualKey: 0x31, keyDown: false);
-        event2?.flags = .maskNonCoalesced
-        event2?.post(tap: .cghidEventTap)
+            if let event2 = CGEvent(keyboardEventSource: nil, virtualKey: 0x31, keyDown: false) {
+                event2.flags = .maskNonCoalesced
+                event2.post(tap: .cghidEventTap)
+            }
+            return true
+        } else {
+            return false
+        }
     }
 
     private static func keyCodeToString(_ inputSource: TISInputSource, keyCode: CGKeyCode, eventModifiers: Int) -> String? {
