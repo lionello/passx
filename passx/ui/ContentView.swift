@@ -7,15 +7,19 @@
 
 import SwiftUI
 import Introspect
-import UserNotifications
 
 enum Focusable: Hashable {
     case query
-    case result(id: String)
+    case entry(id: String)
+}
+
+struct Entry: Identifiable {
+    let id: String
+    let index: Int
 }
 
 struct ContentView: View {
-    
+
     let myWindow: NSWindow?
     @EnvironmentObject var viewModel: PassViewModel
 
@@ -30,6 +34,8 @@ struct ContentView: View {
             return textField?.stringValue ?? textView?.string ?? ""
         }
     }
+
+    static let runningForPreviews = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
 
     var body: some View {
         VStack {
@@ -62,9 +68,11 @@ struct ContentView: View {
                 }
                 .focused($focusField, equals: .query)
                 .onAppear {
-                    debugPrint("onAppear")
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        focusQuery()
+                    if !ContentView.runningForPreviews {
+                        debugPrint("onAppear")
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            focusQuery()
+                        }
                     }
                 }
 
@@ -72,42 +80,27 @@ struct ContentView: View {
                 get: { self.uiString },
                 set: { self.input = $0 ?? "" }
             )
-            List(viewModel.entries, id: \.self, selection: binding) { str in
-                HStack {
-                    if let slash = str.lastIndex(of: "/") {
-                        let path = ..<slash
-                        let username = String(str[str.index(after: slash)...])
-                        Text(String(str[path]))
-                        Button(username) {
-                            setText(str)
-                            submitAndClose(text: username)
-                        }
-                    } else {
-                        Button(str) {
-                            setText(str)
-                            submitAndClose(text: str)
-                        }
+            let entries = viewModel.entries.enumerated().map { index, entry in
+                Entry(id: entry, index: index)
+            }
+            List(entries, id: \.id, selection: binding) { pair in
+                EntryRow(index: pair.index, entry: pair.id) { entry, submission in
+                    switch submission {
+                    case .Literal(let string):
+                        setText(entry)
+                        submitAndClose(text: string)
+                        break
+                    case .Field(let passField):
+                        submitAndClose(entry: entry, field: passField)
+                        break
                     }
-                    Button("●●●") {
-                        submitAndClose(entry: str, field: .password)
-                    }
-                    Menu("...") {
-                        Button("Username") {
-                            submitAndClose(entry: str, field: .username)
-                        }
-                        Button("TOTP") {
-                            submitAndClose(entry: str, field: .current_totp)
-                        }
-                    }
-                    .menuIndicator(.hidden)
-                    .fixedSize()
                 }
-                .focused($focusField, equals: .result(id: str))
+                .focused($focusField, equals: .entry(id: pair.id))
             }
         }
     }
 
-    private func submitPassword(entry: String, addReturn: Bool, copyTOTP: Bool) {
+    private func submitPassword(entry: String, addReturn: Bool, copyTOTP: Bool) -> Void {
         submitAndClose(entry: entry, field: .password, addReturn: addReturn)
         if copyTOTP {
             copyToClipboard(entry: entry, field: .current_totp)
@@ -139,39 +132,6 @@ struct ContentView: View {
         textField?.currentEditor()?.selectAll(self)
     }
 
-    private static func copyToClipboard(_ text: String) -> Void {
-        NSPasteboard.general.clearContents()
-        if NSPasteboard.general.setString(text, forType: .string) {
-            showBanner(title: "Copied to clipboard", body: text)
-        } else {
-            debugPrint("NSPasteboard.general.setString failed")
-        }
-    }
-
-    private static func showBanner(title: String, body: String) -> Void {
-        let notificationCenter = UNUserNotificationCenter.current();
-        notificationCenter.getNotificationSettings { (settings) in
-            if settings.authorizationStatus == .authorized {
-
-                let content = UNMutableNotificationContent();
-                content.title = title;
-                content.body = body;
-
-                let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 0.1, repeats: false);
-
-                let uuidString = UUID().uuidString;
-                let request = UNNotificationRequest(identifier: uuidString, content: content, trigger: trigger);
-
-                // Schedule the request with the system.
-                notificationCenter.add(request) { (error) in
-                    if let error = error {
-                        debugPrint(error.localizedDescription)
-                    }
-                }
-            }
-        }
-    }
-
     func copyToClipboard(entry: String, field: PassField) -> Void {
         do {
             debugPrint("copy entry", entry, "field", field)
@@ -180,7 +140,6 @@ struct ContentView: View {
             }
         }
         catch {
-            // TODO: show an error message
             debugPrint(error.localizedDescription)
         }
     }
@@ -223,16 +182,41 @@ struct ContentView: View {
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView(myWindow: nil)
-            .environmentObject(PassViewModel(pass: MockPass(), entries: ["a/b"]))
+            .environmentObject(PassViewModel(pass: MockPass(), entries: ["example.com/username"]))
 
         ContentView(myWindow: nil)
             .preferredColorScheme(.dark)
-            .environmentObject(PassViewModel(pass: MockPass(), entries: ["a"]))
+            .environmentObject(PassViewModel(pass: MockPass(), entries: ["username"]))
     }
 }
 
 extension Array {
     func singleOrNil() -> Element? {
         return count == 1 ? self[0] : nil
+    }
+}
+
+// From https://www.avanderlee.com/swiftui/conditional-view-modifier/
+extension View {
+    /// Applies the given transform if the given condition evaluates to `true`.
+    /// - Parameters:
+    ///   - condition: The condition to evaluate.
+    ///   - transform: The transform to apply to the source `View`.
+    /// - Returns: Either the original `View` or the modified `View` if the condition is `true`.
+    @ViewBuilder func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
+        if condition {
+            transform(self)
+        } else {
+            self
+        }
+    }
+
+    /// Like `View.keyboardShortcut(_:modifiers)` but with optional `key`
+    @ViewBuilder func keyboardShortcut(_ key: KeyEquivalent?, modifiers: EventModifiers = .command) -> some View {
+        if let key = key {
+            self.keyboardShortcut(key, modifiers: modifiers)
+        } else {
+            self
+        }
     }
 }

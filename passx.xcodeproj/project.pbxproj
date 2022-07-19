@@ -17,6 +17,7 @@
 		DD6F8678277FBBB500E903D4 /* SearchTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD6F8677277FBBB500E903D4 /* SearchTextField.swift */; };
 		DD8562C627A5C05000408410 /* PassViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD8562C527A5C05000408410 /* PassViewModelTests.swift */; };
 		DD8562C827A6FA5900408410 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD8562C727A6FA5900408410 /* Extensions.swift */; };
+		DD8F0AB528822E3E00CC8601 /* EntryRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD8F0AB428822E3E00CC8601 /* EntryRow.swift */; };
 		DDBC555A277C0C9D00544E4D /* passxApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBC5559277C0C9D00544E4D /* passxApp.swift */; };
 		DDBC555C277C0C9D00544E4D /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBC555B277C0C9D00544E4D /* ContentView.swift */; };
 		DDBC5561277C0C9E00544E4D /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DDBC5560277C0C9E00544E4D /* Preview Assets.xcassets */; };
@@ -61,6 +62,7 @@
 		DD6F8677277FBBB500E903D4 /* SearchTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchTextField.swift; sourceTree = "<group>"; };
 		DD8562C527A5C05000408410 /* PassViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassViewModelTests.swift; sourceTree = "<group>"; };
 		DD8562C727A6FA5900408410 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		DD8F0AB428822E3E00CC8601 /* EntryRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryRow.swift; sourceTree = "<group>"; };
 		DDBC5556277C0C9D00544E4D /* passx.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = passx.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DDBC5559277C0C9D00544E4D /* passxApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = passxApp.swift; sourceTree = "<group>"; };
 		DDBC555B277C0C9D00544E4D /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -114,6 +116,7 @@
 			isa = PBXGroup;
 			children = (
 				DDBC555B277C0C9D00544E4D /* ContentView.swift */,
+				DD8F0AB428822E3E00CC8601 /* EntryRow.swift */,
 				DDBC558C277C269700544E4D /* FloatingPanel.swift */,
 				DD3CBE34279E73EF00A8538C /* MenuBarPopoverCommands.swift */,
 				DD3CBE3A27A2EDED00A8538C /* PassViewModel.swift */,
@@ -365,6 +368,7 @@
 				DDBC555A277C0C9D00544E4D /* passxApp.swift in Sources */,
 				DDBC5596277C398700544E4D /* PasteUtil.swift in Sources */,
 				DD3CBE35279E73EF00A8538C /* MenuBarPopoverCommands.swift in Sources */,
+				DD8F0AB528822E3E00CC8601 /* EntryRow.swift in Sources */,
 				DD3CBE3727A2591800A8538C /* DebugPrint.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
