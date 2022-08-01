@@ -11,80 +11,121 @@ import Foundation
 
 class GoPassWrapper : PassProtocol {
     private let wrapper: String
-    
+
     init(wrapper: String) {
         self.wrapper = wrapper
     }
     
-    func getLogin(entry: String, field: PassField) throws -> String? {
+    func getLogin(entry: String, field: PassField) async throws -> String? {
         let json: [String:String]  = [
             "type": field == .password || field == .username ? "getLogin" : "getData",
             "entry": entry,
         ]
-        let map = try invokeJsonApi(json) as! [String:Any]
+        let map = try await invokeJsonApi(json) as! [String:Any]
         return map[field.rawValue] as? String
     }
 
-    func query(_ query: String) throws -> [String] {
+    func query(_ query: String) async throws -> [String] {
         let json: [String:String]  = [
             "type": "query",
             "query": query,
         ]
-        return try invokeJsonApi(json) as! [String]
+        return try await invokeJsonApi(json) as! [String]
     }
     
-    func queryHost(_ host: String) throws -> [String] {
+    func queryHost(_ host: String) async throws -> [String] {
         let json: [String:String]  = [
             "type": "queryHost",
             "host": host,
         ]
-        return try invokeJsonApi(json) as! [String]
+        return try await invokeJsonApi(json) as! [String]
     }
-    
-    private func invokeJsonApi(_ json: Any) throws -> Any {
-        let task = Process()
-        task.executableURL = URL(fileURLWithPath: self.wrapper)
-        let inputPipe = Pipe()
-        let outputPipe = Pipe()
-        task.standardInput = inputPipe
-        task.standardOutput = outputPipe
-        let errorPipe = Pipe()
-        task.standardError = errorPipe
-        
-        let data = try JSONSerialization.data(withJSONObject: json, options: [])
-        try inputPipe.fileHandleForWriting.write(contentsOf: data.nativeMessage())
-        
-        try task.run()
-        task.waitUntilExit()
-        
-        if task.terminationStatus != 0 {
-            throw PassError.err(msg: try errorPipe.readUtf8())
+
+    struct Subprocess {
+        var process = Process()
+
+        private var inputPipe = Pipe()
+        private var outputPipe = Pipe()
+        private var errorPipe = Pipe()
+
+        init(wrapper: String) throws {
+            process.executableURL = URL(fileURLWithPath: wrapper)
+            process.standardInput = inputPipe
+            process.standardOutput = outputPipe
+            process.standardError = errorPipe
+//            process.arguments = TODO
+            try process.run()
         }
-        return try JSONSerialization.jsonObject(with: try outputPipe.readNativeMessage()!, options: [])
+
+        var stdout: FileHandle {
+            return outputPipe.fileHandleForReading
+        }
+
+        var stdin: FileHandle {
+            return inputPipe.fileHandleForWriting
+        }
+
+        var stderr: FileHandle {
+            return errorPipe.fileHandleForReading
+        }
+    }
+
+    private func invokeJsonApi(_ json: Any) async throws -> Any {
+        let subprocess = try Subprocess(wrapper: self.wrapper)
+        defer {
+            subprocess.process.interrupt()
+        }
+
+        let data = try JSONSerialization.data(withJSONObject: json, options: [])
+        try subprocess.stdin.write(contentsOf: data.nativeMessage())
+
+        let message = try await subprocess.stdout.nativeMessage()
+        let json = try JSONSerialization.jsonObject(with: message, options: [])
+
+        // Check for {"error":"…"} payload first
+        if let map = json as? [String:Any] {
+            if let error = map["error"] as? String {
+                throw PassError.err(msg: error)
+            }
+        }
+        return json
     }
 }
 
 extension Data {
-    
+
     init(nativeMessage: Data) {
-        let size = nativeMessage.withUnsafeBytes {
-            $0.load(as: Int32.self)
-        }
+        let size = UInt32(littleEndian: nativeMessage.withUnsafeBytes {
+            $0.load(as: UInt32.self)
+        })
         self.init(nativeMessage[4..<4+size])
     }
-    
+
     func nativeMessage() -> Data {
         let prefix = Swift.withUnsafeBytes(of: Int32(self.count)) { Data($0) }
         return prefix + self
     }
 }
 
-extension Pipe {
-    
-    func readNativeMessage() throws -> Data? {
-        guard let data = try self.fileHandleForReading.readToEnd() else {
-            return nil
+extension FileHandle {
+
+    func nativeMessage() async throws -> Data {
+        var base = bytes.makeAsyncIterator()
+        guard let b0 = try await base.next(),
+              let b1 = try await base.next(),
+              let b2 = try await base.next(),
+              let b3 = try await base.next() else {
+            throw PassError.invalidNativeMessage
         }
-        return Data(nativeMessage: data)
+        let len = UInt32(littleEndian: [b0, b1, b2, b3].withUnsafeBytes {
+            $0.load(as: UInt32.self)
+        })
+        assert(len < 1048576) // avoid absurdly large messages
+        var data = Data()
+        while let b = try await base.next() {
+            data.append(b)
+            if data.count == len { return data }
+        }
+        throw PassError.incompleteMessage
     }
 }

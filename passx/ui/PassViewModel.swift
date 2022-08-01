@@ -15,7 +15,7 @@ final class PassViewModel : ObservableObject {
     @Published private(set) var suggestion: String?
     @Published private(set) var entries: [String]
 
-    private var task: Task<Void, Error>?
+    private var task: Task<Void, Never>?
 
     init(pass: PassProtocol, entries: [String] = []) {
         self.pass = pass
@@ -35,14 +35,20 @@ final class PassViewModel : ObservableObject {
 
         guard text.count > 1 else { return }
         task = Task(priority: .userInitiated) {
-            // TODO: sort by LRU to ensure last used ones are shown first
-            let result = try self.pass.query(text)
-            guard !Task.isCancelled else { return }
-            
-            self.entries = result
-            if !suggested {
-                guard !result.contains(text) else { return }
-                _ = setSuggestion(text, entries: result)
+            do {
+                let result = try await self.pass.query(text)
+//                try Task.checkCancellation()
+                guard !Task.isCancelled else { return }
+
+                // TODO: sort result by LRU to ensure last used ones are shown first
+                self.entries = result
+                if !suggested {
+                    guard !result.contains(text) else { return }
+                    _ = setSuggestion(text, entries: result)
+                }
+            }
+            catch {
+                debugPrint(error)
             }
         }
     }

@@ -91,7 +91,9 @@ struct ContentView: View {
                         submitAndClose(text: string)
                         break
                     case .Field(let passField):
-                        submitAndClose(entry: entry, field: passField)
+                        Task.init {
+                            await submitAndClose(entry: entry, field: passField)
+                        }
                         break
                     }
                 }
@@ -101,9 +103,11 @@ struct ContentView: View {
     }
 
     private func submitPassword(entry: String, addReturn: Bool, copyTOTP: Bool) -> Void {
-        submitAndClose(entry: entry, field: .password, addReturn: addReturn)
-        if copyTOTP {
-            copyToClipboard(entry: entry, field: .current_totp)
+        Task.init {
+            await submitAndClose(entry: entry, field: .password, addReturn: addReturn)
+            if copyTOTP {
+                await copyToClipboard(entry: entry, field: .current_totp)
+            }
         }
     }
 
@@ -132,10 +136,10 @@ struct ContentView: View {
         textField?.currentEditor()?.selectAll(self)
     }
 
-    func copyToClipboard(entry: String, field: PassField) -> Void {
+    func copyToClipboard(entry: String, field: PassField) async -> Void {
         do {
             debugPrint("copy entry", entry, "field", field)
-            if let text = try viewModel.pass.getLogin(entry: entry, field: field) {
+            if let text = try await viewModel.pass.getLogin(entry: entry, field: field) {
                 _ = CopyUtil.copyToClipboard(text)
             }
         }
@@ -165,10 +169,10 @@ struct ContentView: View {
         }
     }
     
-    func submitAndClose(entry: String, field: PassField, addReturn: Bool = false) -> Void {
+    func submitAndClose(entry: String, field: PassField, addReturn: Bool = false) async -> Void {
         do {
             debugPrint("submit entry", entry, "field", field)
-            if let text = try viewModel.pass.getLogin(entry: entry, field: field) {
+            if let text = try await viewModel.pass.getLogin(entry: entry, field: field) {
                 setText(entry)
                 try submitAndClose(text, addReturn: addReturn)
             }

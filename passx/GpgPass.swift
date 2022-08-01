@@ -25,25 +25,25 @@ class GpgPass : PassProtocol {
         self.store = store
     }
     
-    func getLogin(entry: String, field: PassField) throws -> String? {
-        let task = Process()
-        task.executableURL = URL(fileURLWithPath: self.gpg)
+    func getLogin(entry: String, field: PassField) async throws -> String? {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: self.gpg)
         let outputPipe = Pipe()
-        task.standardOutput = outputPipe
+        process.standardOutput = outputPipe
         let errorPipe = Pipe()
-        task.standardError = errorPipe
+        process.standardError = errorPipe
         
         let path = NSString.path(withComponents: [self.store, entry]) + ".gpg"
-        task.arguments = ["-d", path]
+        process.arguments = ["-d", path]
         
-        try task.run()
-        task.waitUntilExit()
+        try process.run()
+        process.waitUntilExit() // FIXME: blocks indefinitely if something's wrong with scdaemon
         
-        if task.terminationStatus != 0 {
-            throw PassError.err(msg: try errorPipe.readUtf8())
+        if process.terminationStatus != 0 {
+            throw PassError.err(msg: try errorPipe.fileHandleForReading.readUtf8())
         }
 
-        let lines = try outputPipe.readUtf8()?.split(separator: "\n")
+        let lines = try outputPipe.fileHandleForReading.readUtf8()?.split(separator: "\n")
         // FIXME: .username should accept any of ["login", "username", "user"]
         if let pw = lines?.first(where: { $0.lowercased().starts(with: field.prefix())}) {
             // FIXME: calculate TOTP for .current_totp
@@ -53,10 +53,11 @@ class GpgPass : PassProtocol {
     }
 }
 
-extension Pipe {
-    
+extension FileHandle {
+
+    @available(*, deprecated, message: "blocking")
     func readUtf8() throws -> String? {
-        guard let data = try self.fileHandleForReading.readToEnd() else {
+        guard let data = try self.readToEnd() else {
             return nil
         }
         return String(data: data, encoding: .utf8)

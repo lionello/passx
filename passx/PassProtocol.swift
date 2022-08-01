@@ -10,6 +10,8 @@ import Foundation
 enum PassError: Error {
     case err(msg: String?)
     case notImplemented
+    case invalidNativeMessage
+    case incompleteMessage
 }
 
 enum PassField : String {
@@ -27,7 +29,7 @@ enum PassField : String {
 }
 
 protocol PassProtocol {
-    func getLogin(entry: String, field: PassField) throws -> String?
-    func query(_ query: String) throws -> [String]
-    func queryHost(_ host: String) throws -> [String]
+    func getLogin(entry: String, field: PassField) async throws -> String?
+    func query(_ query: String) async throws -> [String]
+    func queryHost(_ host: String) async throws -> [String]
 }
