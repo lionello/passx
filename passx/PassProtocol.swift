@@ -11,7 +11,6 @@ enum PassError: Error {
     case err(msg: String?)
     case notImplemented
     case invalidNativeMessage
-    case incompleteMessage
 }
 
 enum PassField : String {

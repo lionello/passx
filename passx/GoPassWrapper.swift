@@ -120,12 +120,14 @@ extension FileHandle {
         let len = UInt32(littleEndian: [b0, b1, b2, b3].withUnsafeBytes {
             $0.load(as: UInt32.self)
         })
-        assert(len < 1048576) // avoid absurdly large messages
         var data = Data()
         while let b = try await base.next() {
             data.append(b)
             if data.count == len { return data }
         }
-        throw PassError.incompleteMessage
+        // Not a native message? Parse the data as an UTF8 error message
+        var error = Data([b0, b1, b2, b3])
+        error.append(data)
+        throw PassError.err(msg: String(data: error, encoding: .utf8))
     }
 }
