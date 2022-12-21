@@ -44,8 +44,8 @@ class GpgPass : PassProtocol {
         }
 
         let lines = try outputPipe.fileHandleForReading.readUtf8()?.split(separator: "\n")
-        // FIXME: .username should accept any of ["login", "username", "user"]
-        if let pw = lines?.first(where: { $0.lowercased().starts(with: field.prefix())}) {
+        // FIXME: add special case for .url
+        if let pw = lines?.first(where: { field.isMatch($0.lowercased()) }) {
             // FIXME: calculate TOTP for .current_totp
             return String(pw)
         }

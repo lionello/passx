@@ -12,18 +12,18 @@ class GoPassWrapperTests: XCTestCase {
     let test = "zc.qq.com"
     let pass = GoPassWrapper(wrapper: "\(AppDelegate.HOME)/.config/gopass/gopass_wrapper.sh")
 
-    func testGoPassLogin() throws {
-        let pw = try pass.getLogin(entry: test, field: .password)
+    func testGoPassLogin() async throws {
+        let pw = try await pass.getLogin(entry: test, field: .password)
         XCTAssertNotEqual(pw!, "")
     }
 
-    func testGoPassQuery() throws {
-        let pw = try pass.query(String(test.prefix(4)))
+    func testGoPassQuery() async throws {
+        let pw = try await pass.query(String(test.prefix(4)))
         XCTAssertEqual(pw, [test])
     }
 
-    func testGoPassQueryHost() throws {
-        let pw = try pass.queryHost(test)
+    func testGoPassQueryHost() async throws {
+        let pw = try await pass.queryHost(test)
         XCTAssertEqual(pw, [test])
     }
 }

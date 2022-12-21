@@ -9,11 +9,11 @@ import XCTest
 @testable import passx
 
 class GpgPassTests: XCTestCase {
-    let test = "zc.qq.com"
+    let test = "zc.qq.com" // FIXME: this test only works for me
     let pass = GpgPass(gpg: "\(AppDelegate.HOME)/.nix-profile/bin/gpg", store: "\(AppDelegate.HOME)/.password-store")
 
-    func testGpgPassLogin() throws {
-        let pw = try pass.getLogin(entry: test, field: .password)
+    func testGpgPassLogin() async throws {
+        let pw = try await pass.getLogin(entry: test, field: .password)
         XCTAssertNotEqual(pw!, "")
     }
 

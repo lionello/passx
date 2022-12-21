@@ -1,5 +1,5 @@
 //
-//  Pass.swift
+//  PassProtocol.swift
 //  passx
 //
 //  Created by Lionello Lunesu on 2021-12-28.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum PassError: Error {
+enum PassError : Error {
     case err(msg: String?)
     case notImplemented
     case invalidNativeMessage
@@ -19,11 +19,21 @@ enum PassField : String {
     case current_totp
     case url
 
-    func prefix() -> String {
-        if self == .password {
-            return ""
+    fileprivate func prefixes() -> [String] {
+        switch self {
+        case .password:
+            return [""] // matches all lines
+        case .username:
+            return ["login:", "username:", "user:"] // TODO: require a space after :?
+        case .current_totp:
+            return ["totp:", "otpauth:"]
+        case .url:
+            return ["https:", "url:"]
         }
-        return self.rawValue + ": "
+    }
+
+    func isMatch(_ line: String) -> Bool {
+        return prefixes().contains(where: line.hasPrefix)
     }
 }
 
