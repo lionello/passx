@@ -18,11 +18,11 @@ extension KeyboardShortcuts.Name {
 
 class AppDelegate: NSObject, NSApplicationDelegate {
 
+    static let HOME = ProcessInfo.processInfo.environment["HOME"]!
     /// $XDG_CONFIG_HOME defines the base directory relative to which user-specific configuration files should be stored.
     static let XDG_CONFIG_HOME = ProcessInfo.processInfo.environment["XDG_CONFIG_HOME"]
     /// If $XDG_CONFIG_HOME is either not set or empty, a default equal to $HOME/.config should be used.
-    static let configPath = XDG_CONFIG_HOME?.isEmpty == false ? XDG_CONFIG_HOME! : "\(HOME!)/.config"
-    static let HOME = ProcessInfo.processInfo.environment["HOME"]
+    static let configPath = XDG_CONFIG_HOME?.isEmpty == false ? XDG_CONFIG_HOME! : "\(HOME)/.config"
 
     static let defaultWrapperPath = "\(configPath)/gopass/gopass_wrapper.sh"
 
