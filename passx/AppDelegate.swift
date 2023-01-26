@@ -60,12 +60,24 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-//    func applicationDockMenu(_ sender: NSApplication) -> NSMenu? {
-//      let menu = NSMenu()
+    func applicationDockMenu(_ sender: NSApplication) -> NSMenu? {
+        let menu = NSMenu()
+
 //        menu.addItem(withTitle: "Select All",
 //                     action: #selector(NSTextField.selectAll(_:)), keyEquivalent: "a")
-//      return menu
-//    }
+
+        // Get the version number from the Info.plist
+        if let versionNumber = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
+            // Create a new menu item
+            let versionMenuItem = NSMenuItem()
+            // Set the title of the menu item to the version number
+            versionMenuItem.title = "Version \(versionNumber)"
+            // Add the menu item to the dock menu
+            menu.addItem(versionMenuItem)
+        }
+
+        return menu
+    }
 
     @MainActor private func createFloatingPanel() {
         // Create the window and set the content view.
