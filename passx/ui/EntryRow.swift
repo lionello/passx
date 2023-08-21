@@ -46,10 +46,10 @@ struct EntryRow: View {
             } label: {
                 Text(username)
                 if let char = char {
-                    Text("⌥⌘\(char.description)").opacity(0.5)
+                    Text("⌘\(char.description)").opacity(0.5)
                 }
             }
-            .keyboardShortcut(key, modifiers: [.command, .option])
+            .keyboardShortcut(key)
 
             // Show button for the password
             Button {
@@ -57,10 +57,10 @@ struct EntryRow: View {
             } label: {
                 Text("●●●")
                 if let char = char {
-                    Text("⌘\(char.description)").opacity(0.5)
+                    Text("⌥⌘\(char.description)").opacity(0.5)
                 }
             }
-            .keyboardShortcut(key)
+            .keyboardShortcut(key, modifiers: [.command, .option])
 
             // Show a context menu for all other options
             Menu("…") {
