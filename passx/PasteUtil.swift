@@ -11,6 +11,8 @@ import Carbon
 
 class PasteUtil {
 
+    fileprivate static let delay: useconds_t = 22259 // ~22ms
+
     private init() {}
 
     static func paste(vk: CGKeyCode, flags: CGEventFlags = CGEventFlags(rawValue: 0)) -> Bool {
@@ -18,12 +20,15 @@ class PasteUtil {
             event1.flags = flags
             event1.post(tap: .cghidEventTap)
 
+            usleep(delay)
+
             if let event2 = CGEvent(keyboardEventSource: nil, virtualKey: vk, keyDown: false) {
                 event2.flags = flags
                 event2.post(tap: .cghidEventTap)
             }
             return true
         } else {
+            debugPrint("failed to translate VK \(vk)")
             return false
         }
     }
@@ -31,6 +36,7 @@ class PasteUtil {
     static func paste(keys: [KeyCode]) {
         keys.forEach {
             _ = paste(vk: $0.vk, flags: $0.flags)
+            usleep(delay/10)
         }
     }
 
@@ -51,12 +57,15 @@ class PasteUtil {
             event1.keyboardSetUnicodeString(stringLength: utf16Chars.count, unicodeString: utf16Chars)
             event1.post(tap: .cghidEventTap)
 
+            usleep(delay/10)
+
             if let event2 = CGEvent(keyboardEventSource: nil, virtualKey: 0x31, keyDown: false) {
                 event2.flags = .maskNonCoalesced
                 event2.post(tap: .cghidEventTap)
             }
             return true
         } else {
+            debugPrint("failed to translate VK 0x31")
             return false
         }
     }
