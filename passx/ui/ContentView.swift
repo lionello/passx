@@ -26,6 +26,7 @@ struct ContentView: View {
     @State private var input: String = ""
     @State private var textField: NSTextField?
     @State private var textView: NSTextView? // in case we end up with a TextView
+    @State private var lastTask: Task<Void, Never>?
 
     @FocusState private var focusField: Focusable?
 
@@ -47,7 +48,7 @@ struct ContentView: View {
                     self.textField = $0
                 }
                 .onChange(of: input) { [input] newValue in
-                    guard !ContentView.isDelete(old: input, new: newValue) else { return }
+                    guard !ContentView.isDelete(old: input, new: newValue) || viewModel.entries.count == 0 else { return }
                     self.viewModel.autocomplete(newValue)
                 }
                 .frame(width: 512, height: 30)
@@ -91,9 +92,7 @@ struct ContentView: View {
                         submitAndClose(text: string)
                         break
                     case .Field(let passField):
-                        Task.init {
-                            await submitAndClose(entry: entry, field: passField)
-                        }
+                        submitAndClose(entry: entry, field: passField)
                         break
                     }
                 }
@@ -103,8 +102,9 @@ struct ContentView: View {
     }
 
     private func submitPassword(entry: String, addReturn: Bool, copyTOTP: Bool) -> Void {
-        Task.init {
-            await submitAndClose(entry: entry, field: .password, addReturn: addReturn)
+        lastTask?.cancel()
+        lastTask = Task.init {
+            await submitAndCloseAsync(entry: entry, field: .password, addReturn: addReturn)
             if copyTOTP {
                 await copyToClipboard(entry: entry, field: .current_totp)
             }
@@ -148,7 +148,7 @@ struct ContentView: View {
         }
     }
 
-    private func submitAndClose(_ text: String, addReturn: Bool = false) throws {
+    private func _submitAndClose(_ text: String, addReturn: Bool = false) throws {
         let keys = try PasteUtil.stringToKeyCodes(text + (addReturn ? "\r" : ""))
         focusQuery()
         DispatchQueue.main.async {
@@ -162,23 +162,30 @@ struct ContentView: View {
     func submitAndClose(text: String) -> Void {
         do {
             debugPrint("submit text", text)
-            try submitAndClose(text)
+            try _submitAndClose(text)
         } catch {
             // TODO: show an error message
             debugPrint(error.localizedDescription)
         }
     }
     
-    func submitAndClose(entry: String, field: PassField, addReturn: Bool = false) async -> Void {
+    func submitAndCloseAsync(entry: String, field: PassField, addReturn: Bool = false) async -> Void {
         do {
             debugPrint("submit entry", entry, "field", field)
             if let text = try await viewModel.pass.getLogin(entry: entry, field: field) {
                 setText(entry)
-                try submitAndClose(text, addReturn: addReturn)
+                try _submitAndClose(text, addReturn: addReturn)
             }
         } catch {
             // TODO: show an error message
             debugPrint(error.localizedDescription)
+        }
+    }
+
+    func submitAndClose(entry: String, field: PassField, addReturn: Bool = false) -> Void {
+        lastTask?.cancel()
+        lastTask = Task.init {
+            await submitAndCloseAsync(entry: entry, field: field, addReturn: addReturn)
         }
     }
 }
