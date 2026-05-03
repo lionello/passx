@@ -7,3 +7,7 @@ xcuserdata/
 ## Xcode 8 and earlier
 *.xcscmblueprint
 *.xccheckout
+
+# Certificates and build artifacts
+*.p12
+*.dmg
