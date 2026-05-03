@@ -32,8 +32,9 @@ struct EntryRow: View {
             let slash = entry.lastIndex(of: "/")
             if let slash = slash {
                 let url = entry[..<slash]
-                if let match = EntryRow.linkDetector.firstMatch(in: entry, options: [], range: NSRange(..<url.count)) {
-                    Link(url, destination: match.url!) // FIXME: force https://
+                if let match = EntryRow.linkDetector.firstMatch(in: entry, options: [], range: NSRange(..<url.count)),
+                   let matchURL = match.url {
+                    Link(url, destination: matchURL)
                 } else {
                     Text(url)
                 }

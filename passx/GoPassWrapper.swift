@@ -21,7 +21,9 @@ class GoPassWrapper : PassProtocol {
             "type": field == .password || field == .username ? "getLogin" : "getData",
             "entry": entry,
         ]
-        let map = try await invokeJsonApi(json) as! [String:Any]
+        guard let map = try await invokeJsonApi(json) as? [String:Any] else {
+            throw PassError.err(msg: "Unexpected response format")
+        }
         return map[field.rawValue] as? String
     }
 
@@ -30,15 +32,21 @@ class GoPassWrapper : PassProtocol {
             "type": "query",
             "query": query,
         ]
-        return try await invokeJsonApi(json) as! [String]
+        guard let result = try await invokeJsonApi(json) as? [String] else {
+            throw PassError.err(msg: "Unexpected response format")
+        }
+        return result
     }
-    
+
     func queryHost(_ host: String) async throws -> [String] {
         let json: [String:String]  = [
             "type": "queryHost",
             "host": host,
         ]
-        return try await invokeJsonApi(json) as! [String]
+        guard let result = try await invokeJsonApi(json) as? [String] else {
+            throw PassError.err(msg: "Unexpected response format")
+        }
+        return result
     }
 
     struct Subprocess {

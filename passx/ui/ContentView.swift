@@ -46,6 +46,7 @@ struct ContentView: View {
                 }
                 .introspectTextField {
                     self.textField = $0
+                    $0.focusRingType = .none
                 }
                 .onChange(of: input) { [input] newValue in
                     guard !ContentView.isDelete(old: input, new: newValue) || viewModel.entries.count == 0 else { return }

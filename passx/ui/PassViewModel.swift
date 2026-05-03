@@ -69,6 +69,8 @@ final class PassViewModel : ObservableObject {
 
 extension String {
     func hasCaseAndDiacriticInsensitivePrefix(_ prefix: String) -> Bool {
-        return self.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current).hasPrefix(prefix)
+        let folded = self.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+        let foldedPrefix = prefix.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+        return folded.hasPrefix(foldedPrefix)
     }
 }
