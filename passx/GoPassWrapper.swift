@@ -102,7 +102,7 @@ extension Data {
     }
 
     func nativeMessage() -> Data {
-        let prefix = Swift.withUnsafeBytes(of: Int32(self.count)) { Data($0) }
+        let prefix = Swift.withUnsafeBytes(of: Int32(self.count).littleEndian) { Data($0) }
         return prefix + self
     }
 }
