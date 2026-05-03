@@ -77,6 +77,8 @@ struct ContentView: View {
                     }
                 }
 
+            Divider()
+
             let binding = Binding<String?>(
                 get: { self.uiString },
                 set: { self.input = $0 ?? "" }
