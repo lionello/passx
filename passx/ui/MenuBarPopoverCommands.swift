@@ -31,7 +31,7 @@ struct MenuBarPopoverCommands: Commands {
 //                }.keyboardShortcut(KeyEquivalent("v"), modifiers: .command)
 
                 Button("Select All") {
-//                    appDelegate.contentView.editSelectAll()
+                    NSApp.sendAction(#selector(NSText.selectAll(_:)), to: nil, from: nil)
                 }.keyboardShortcut(KeyEquivalent("a"), modifiers: .command)
             }
         }

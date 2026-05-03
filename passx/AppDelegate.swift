@@ -9,6 +9,7 @@ import Cocoa
 import SwiftUI
 import KeyboardShortcuts
 import UserNotifications
+import ApplicationServices
 
 // From https://www.markusbodner.com/til/2021/02/08/use-global-keyboard-hotkey-to-show/hide-a-window-using-swift/
 extension KeyboardShortcuts.Name {
@@ -34,6 +35,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // FIXME: make this configurable
         pass = GoPassWrapper(wrapper: AppDelegate.defaultWrapperPath)
         
+        // Set up the application menu
+        setupMenuBar()
+        
         createFloatingPanel()
         
         // Center doesn't place it in the absolute center, see the documentation for more details
@@ -53,6 +57,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 //        popover.behavior = .transient
 //        popover.contentViewController = NSHostingController(rootView: newEntryPanel.contentView)
 //        self.popover = popover
+
+        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
+        if !AXIsProcessTrustedWithOptions(options) {
+            debugPrint("Accessibility permission not granted — keypress simulation will not work")
+        }
 
         let center = UNUserNotificationCenter.current()
         center.requestAuthorization(options: [.alert]) { (granted, error) in
@@ -79,6 +88,38 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return menu
     }
 
+    @MainActor private func setupMenuBar() {
+        let mainMenu = NSMenu()
+        
+        // App Menu
+        let appMenuItem = NSMenuItem()
+        mainMenu.addItem(appMenuItem)
+        
+        let appMenu = NSMenu()
+        appMenuItem.submenu = appMenu
+        
+        let appName = ProcessInfo.processInfo.processName
+        appMenu.addItem(withTitle: "About \(appName)", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
+        appMenu.addItem(NSMenuItem.separator())
+        appMenu.addItem(withTitle: "Quit \(appName)", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        
+        // Edit Menu
+        let editMenuItem = NSMenuItem()
+        mainMenu.addItem(editMenuItem)
+        
+        let editMenu = NSMenu(title: "Edit")
+        editMenuItem.submenu = editMenu
+        
+        editMenu.addItem(withTitle: "Cut", action: #selector(NSText.cut(_:)), keyEquivalent: "x")
+        editMenu.addItem(withTitle: "Copy", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+        editMenu.addItem(withTitle: "Paste", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+        editMenu.addItem(withTitle: "Delete", action: #selector(NSText.delete(_:)), keyEquivalent: "")
+        editMenu.addItem(NSMenuItem.separator())
+        editMenu.addItem(withTitle: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
+        
+        NSApplication.shared.mainMenu = mainMenu
+    }
+
     @MainActor private func createFloatingPanel() {
         // Create the window and set the content view.
         newEntryPanel = FloatingPanel(contentRect: NSRect(x: 0, y: 0, width: 512, height: 200), backing: .buffered, defer: false)
@@ -89,7 +130,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             .edgesIgnoringSafeArea(.top)
             .environmentObject(PassViewModel(pass: pass))
 
-        newEntryPanel.title = "Pass Search"
+//        newEntryPanel.title = "Pass Search"
+//        newEntryPanel.Hi
         newEntryPanel.contentView = NSHostingView(rootView: contentView)
     }
 }
