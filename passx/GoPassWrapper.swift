@@ -111,20 +111,20 @@ class GoPassWrapper : PassProtocol {
             }
             throw error
         }
-        let json: Any
+        let response: Any
         do {
-            json = try JSONSerialization.jsonObject(with: message, options: [])
+            response = try JSONSerialization.jsonObject(with: message, options: [])
         } catch {
-            throw PassError.err(msg: "gopass-jsonapi returned a native message that was not valid JSON")
+            throw PassError.err(msg: GoPassWrapper.invalidJsonMessage(request: json, data: message, error: error))
         }
 
         // Check for {"error":"…"} payload first
-        if let map = json as? [String:Any] {
+        if let map = response as? [String:Any] {
             if let error = map["error"] as? String {
                 throw PassError.err(msg: error)
             }
         }
-        return json
+        return response
     }
 
     static func processEnvironment() -> [String:String] {
@@ -144,19 +144,32 @@ class GoPassWrapper : PassProtocol {
         environment["PATH"] = defaultPath.compactMap { $0 }.joined(separator: ":")
         return environment
     }
+
+    private static func invalidJsonMessage(request: Any, data: Data, error: Error) -> String {
+        let requestDescription: String
+        if let requestData = try? JSONSerialization.data(withJSONObject: request, options: [.sortedKeys]),
+           let requestString = String(data: requestData, encoding: .utf8) {
+            requestDescription = requestString
+        } else {
+            requestDescription = String(describing: request)
+        }
+        let preview = String(data: data.prefix(512), encoding: .utf8)?
+            .replacingOccurrences(of: "\n", with: "\\n")
+            .replacingOccurrences(of: "\r", with: "\\r")
+            ?? data.prefix(128).map { String(format: "%02x", $0) }.joined(separator: " ")
+        return "gopass-jsonapi returned invalid JSON for \(requestDescription) (\(data.count) bytes): \(error.localizedDescription). Payload: \(preview)"
+    }
 }
 
 extension Data {
 
     init(nativeMessage: Data) {
-        let size = UInt32(littleEndian: nativeMessage.withUnsafeBytes {
-            $0.load(as: UInt32.self)
-        })
+        let size = UInt32(littleEndianBytes: nativeMessage.prefix(4))
         self.init(nativeMessage[4..<4+size])
     }
 
     func nativeMessage() -> Data {
-        let prefix = Swift.withUnsafeBytes(of: Int32(self.count).littleEndian) { Data($0) }
+        let prefix = UInt32(self.count).littleEndianBytes
         return prefix + self
     }
 }
@@ -171,9 +184,7 @@ extension FileHandle {
               let b3 = try await base.next() else {
             throw PassError.invalidNativeMessage
         }
-        let len = UInt32(littleEndian: [b0, b1, b2, b3].withUnsafeBytes {
-            $0.load(as: UInt32.self)
-        })
+        let len = UInt32(littleEndianBytes: [b0, b1, b2, b3])
         var data = Data()
         while let b = try await base.next() {
             data.append(b)
@@ -183,5 +194,22 @@ extension FileHandle {
         var error = Data([b0, b1, b2, b3])
         error.append(data)
         throw PassError.err(msg: String(data: error, encoding: .utf8))
+    }
+}
+
+extension UInt32 {
+    fileprivate init(littleEndianBytes bytes: some Collection<UInt8>) {
+        self = bytes.prefix(4).enumerated().reduce(UInt32(0)) { result, item in
+            result | (UInt32(item.element) << UInt32(item.offset * 8))
+        }
+    }
+
+    fileprivate var littleEndianBytes: Data {
+        Data([
+            UInt8(self & 0xff),
+            UInt8((self >> 8) & 0xff),
+            UInt8((self >> 16) & 0xff),
+            UInt8((self >> 24) & 0xff),
+        ])
     }
 }

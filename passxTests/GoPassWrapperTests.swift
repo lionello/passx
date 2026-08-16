@@ -26,4 +26,12 @@ class GoPassWrapperTests: XCTestCase {
         let pw = try await pass.queryHost(test)
         XCTAssertEqual(pw, [test])
     }
+
+    func testNativeMessageRoundTripUsesLittleEndianLength() {
+        let payload = Data(repeating: 0x61, count: 333)
+        let message = payload.nativeMessage()
+
+        XCTAssertEqual(Array(message.prefix(4)), [0x4d, 0x01, 0x00, 0x00])
+        XCTAssertEqual(Data(nativeMessage: message), payload)
+    }
 }
