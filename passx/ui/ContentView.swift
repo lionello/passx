@@ -48,8 +48,7 @@ struct ContentView: View {
                     self.textField = $0
                     $0.focusRingType = .none
                 }
-                .onChange(of: input) { [input] newValue in
-                    guard !ContentView.isDelete(old: input, new: newValue) || viewModel.entries.count == 0 else { return }
+                .onChange(of: input) { newValue in
                     self.viewModel.autocomplete(newValue)
                 }
                 .frame(width: 512, height: 30)
@@ -101,7 +100,17 @@ struct ContentView: View {
                 }
                 .focused($focusField, equals: .entry(id: pair.id))
             }
+
+            if let errorMessage = viewModel.errorMessage {
+                ErrorBanner(message: errorMessage) {
+                    viewModel.dismissError()
+                }
+                .padding(.horizontal, 8)
+                .padding(.bottom, 8)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
         }
+        .animation(.easeOut(duration: 0.18), value: viewModel.errorMessage)
     }
 
     private func submitPassword(entry: String, addReturn: Bool, copyTOTP: Bool) -> Void {
@@ -157,8 +166,11 @@ struct ContentView: View {
         DispatchQueue.main.async {
             self.myWindow?.close()
             NSApplication.shared.hide(nil)
-            
-            PasteUtil.paste(keys: keys)
+            AppDelegate.restorePreviousApplication()
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                PasteUtil.paste(keys: keys)
+            }
         }
     }
     
@@ -190,6 +202,39 @@ struct ContentView: View {
         lastTask = Task.init {
             await submitAndCloseAsync(entry: entry, field: field, addReturn: addReturn)
         }
+    }
+}
+
+private struct ErrorBanner: View {
+    let message: String
+    let dismiss: () -> Void
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundColor(.yellow)
+            Text(message)
+                .font(.caption)
+                .lineLimit(3)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .textSelection(.enabled)
+            Button {
+                _ = CopyUtil.copyToClipboard(message)
+            } label: {
+                Image(systemName: "doc.on.doc")
+                    .font(.caption)
+            }
+            .buttonStyle(.plain)
+            Button(action: dismiss) {
+                Image(systemName: "xmark")
+                    .font(.caption)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.vertical, 8)
+        .padding(.horizontal, 10)
+        .background(.regularMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 6))
     }
 }
 

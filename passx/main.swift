@@ -3,7 +3,6 @@
 //  passx
 //
 //  Created by Lionello Lunesu on 2021-12-28.
-//  From https://sarunw.com/posts/how-to-create-macos-app-without-storyboard/
 //
 
 import Foundation

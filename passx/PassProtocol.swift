@@ -13,6 +13,19 @@ enum PassError : Error {
     case invalidNativeMessage
 }
 
+extension PassError: LocalizedError {
+    var errorDescription: String? {
+        switch self {
+        case .err(let msg):
+            return msg
+        case .notImplemented:
+            return "Not implemented"
+        case .invalidNativeMessage:
+            return "Invalid native message"
+        }
+    }
+}
+
 enum PassField : String {
     case password
     case username

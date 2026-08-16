@@ -10,7 +10,7 @@ import XCTest
 
 class GpgPassTests: XCTestCase {
     let test = "zc.qq.com" // FIXME: this test only works for me
-    let pass = GpgPass(gpg: "\(AppDelegate.HOME)/.nix-profile/bin/gpg", store: "\(AppDelegate.HOME)/.password-store")
+    let pass = GpgPass(gpg: "gpg", store: "\(AppDelegate.HOME)/.password-store")
 
     func testGpgPassLogin() async throws {
         let pw = try await pass.getLogin(entry: test, field: .password)

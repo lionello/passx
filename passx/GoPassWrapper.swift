@@ -10,10 +10,17 @@ import Foundation
 
 
 class GoPassWrapper : PassProtocol {
-    private let wrapper: String
+    private let executable: String
+    private let arguments: [String]
 
     init(wrapper: String) {
-        self.wrapper = wrapper
+        self.executable = wrapper
+        self.arguments = []
+    }
+
+    init(executable: String, arguments: [String] = []) {
+        self.executable = executable
+        self.arguments = arguments
     }
     
     func getLogin(entry: String, field: PassField) async throws -> String? {
@@ -56,12 +63,18 @@ class GoPassWrapper : PassProtocol {
         private var outputPipe = Pipe()
         private var errorPipe = Pipe()
 
-        init(wrapper: String) throws {
-            process.executableURL = URL(fileURLWithPath: wrapper)
+        init(executable: String, arguments: [String]) throws {
+            if executable.contains("/") {
+                process.executableURL = URL(fileURLWithPath: executable)
+                process.arguments = arguments
+            } else {
+                process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+                process.arguments = [executable] + arguments
+            }
+            process.environment = GoPassWrapper.processEnvironment()
             process.standardInput = inputPipe
             process.standardOutput = outputPipe
             process.standardError = errorPipe
-//            process.arguments = TODO
             try process.run()
         }
 
@@ -79,7 +92,7 @@ class GoPassWrapper : PassProtocol {
     }
 
     private func invokeJsonApi(_ json: Any) async throws -> Any {
-        let subprocess = try Subprocess(wrapper: self.wrapper)
+        let subprocess = try Subprocess(executable: self.executable, arguments: self.arguments)
         defer {
             subprocess.process.interrupt()
         }
@@ -87,8 +100,23 @@ class GoPassWrapper : PassProtocol {
         let data = try JSONSerialization.data(withJSONObject: json, options: [])
         try subprocess.stdin.write(contentsOf: data.nativeMessage())
 
-        let message = try await subprocess.stdout.nativeMessage()
-        let json = try JSONSerialization.jsonObject(with: message, options: [])
+        let message: Data
+        do {
+            message = try await subprocess.stdout.nativeMessage()
+        } catch {
+            let stderrData = try? subprocess.stderr.readToEnd()
+            let stderr = stderrData.flatMap { String(data: $0, encoding: .utf8) }
+            if let stderr = stderr?.trimmingCharacters(in: .whitespacesAndNewlines), !stderr.isEmpty {
+                throw PassError.err(msg: stderr)
+            }
+            throw error
+        }
+        let json: Any
+        do {
+            json = try JSONSerialization.jsonObject(with: message, options: [])
+        } catch {
+            throw PassError.err(msg: "gopass-jsonapi returned a native message that was not valid JSON")
+        }
 
         // Check for {"error":"…"} payload first
         if let map = json as? [String:Any] {
@@ -97,6 +125,24 @@ class GoPassWrapper : PassProtocol {
             }
         }
         return json
+    }
+
+    static func processEnvironment() -> [String:String] {
+        var environment = ProcessInfo.processInfo.environment
+        let defaultPath = [
+            environment["PATH"],
+            "/run/current-system/sw/bin",
+            "\(AppDelegate.HOME)/.nix-profile/bin",
+            "/opt/homebrew/bin",
+            "/usr/local/bin",
+            "/usr/bin",
+            "/bin",
+            "/usr/sbin",
+            "/sbin",
+            "/usr/local/MacGPG2/bin",
+        ]
+        environment["PATH"] = defaultPath.compactMap { $0 }.joined(separator: ":")
+        return environment
     }
 }
 

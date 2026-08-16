@@ -14,6 +14,7 @@ final class PassViewModel : ObservableObject {
 
     @Published private(set) var suggestion: String?
     @Published private(set) var entries: [String]
+    @Published private(set) var errorMessage: String?
 
     private var task: Task<Void, Never>?
 
@@ -26,14 +27,16 @@ final class PassViewModel : ObservableObject {
         debugPrint("updateQuery text:", text)
         task?.cancel()
         guard !text.isEmpty else {
+            self.entries = []
             self.suggestion = nil
+            self.errorMessage = nil
             return
         }
 
+        self.errorMessage = nil
         guard !self.entries.contains(text) else { return }
         let suggested = setSuggestion(text, entries: self.entries)
 
-        guard text.count > 1 else { return }
         task = Task(priority: .userInitiated) {
             do {
                 let result = try await self.pass.query(text)
@@ -42,19 +45,29 @@ final class PassViewModel : ObservableObject {
 
                 // TODO: sort result by LRU to ensure last used ones are shown first
                 self.entries = result
+                self.errorMessage = nil
                 if !suggested {
                     guard !result.contains(text) else { return }
                     _ = setSuggestion(text, entries: result)
                 }
             }
             catch {
+                guard !Task.isCancelled else { return }
+                self.entries = []
+                self.suggestion = nil
+                self.errorMessage = error.localizedDescription
                 debugPrint(error)
             }
         }
     }
 
+    func dismissError() {
+        errorMessage = nil
+    }
+
     private func setSuggestion(_ text: String, entries: [String]) -> Bool {
         guard let existingSuggestion = PassViewModel.findSuggestion(text: text, entries: entries) else {
+            self.suggestion = nil
             return false
         }
         self.suggestion = existingSuggestion

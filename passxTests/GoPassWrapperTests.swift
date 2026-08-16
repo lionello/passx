@@ -10,7 +10,7 @@ import XCTest
 
 class GoPassWrapperTests: XCTestCase {
     let test = "zc.qq.com"
-    let pass = GoPassWrapper(wrapper: "\(AppDelegate.HOME)/.config/gopass/gopass_wrapper.sh")
+    let pass = GoPassWrapper(executable: "gopass-jsonapi", arguments: ["listen"])
 
     func testGoPassLogin() async throws {
         let pw = try await pass.getLogin(entry: test, field: .password)

@@ -45,6 +45,41 @@ class PassViewModelTests : XCTestCase {
 //        XCTAssertNil(vm.suggestion) FIXME: should not fire
     }
 
+    @MainActor func testSingleCharacterSearchPopulatesEntries() throws {
+        let vm = PassViewModel(pass: mockPass)
+        vm.autocomplete("u")
+        let entries = try self.awaitPublisher(vm.$entries.dropFirst().first())
+        XCTAssertEqual(entries.sorted(), ["mock/user", "user"])
+        XCTAssertEqual(vm.suggestion, "user")
+    }
+
+    @MainActor func testEmptySearchClearsEntriesAndSuggestion() throws {
+        let vm = PassViewModel(pass: mockPass)
+        vm.autocomplete("mo")
+        let entries = try self.awaitPublisher(vm.$entries.dropFirst().first())
+        XCTAssertEqual(entries, ["mock/user"])
+        XCTAssertEqual(vm.suggestion, "mock/user")
+
+        vm.autocomplete("")
+
+        XCTAssertEqual(vm.entries, [])
+        XCTAssertNil(vm.suggestion)
+    }
+
+    @MainActor func testSearchErrorIsPublished() throws {
+        let vm = PassViewModel(pass: mockPass)
+        vm.autocomplete("error")
+        let errorMessage = try self.awaitPublisher(vm.$errorMessage.dropFirst().first())
+
+        XCTAssertEqual(errorMessage, "error")
+        XCTAssertEqual(vm.entries, [])
+        XCTAssertNil(vm.suggestion)
+
+        vm.dismissError()
+
+        XCTAssertNil(vm.errorMessage)
+    }
+
     @MainActor func testNoRefreshOnAcceptingSuggestion() throws {
         let vm = PassViewModel(pass: mockPass)
         let cancellable = vm.$suggestion.sink {

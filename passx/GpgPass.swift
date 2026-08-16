@@ -27,14 +27,20 @@ class GpgPass : PassProtocol {
     
     func getLogin(entry: String, field: PassField) async throws -> String? {
         let process = Process()
-        process.executableURL = URL(fileURLWithPath: self.gpg)
+        if gpg.contains("/") {
+            process.executableURL = URL(fileURLWithPath: self.gpg)
+        } else {
+            process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+            process.arguments = [self.gpg]
+        }
+        process.environment = GoPassWrapper.processEnvironment()
         let outputPipe = Pipe()
         process.standardOutput = outputPipe
         let errorPipe = Pipe()
         process.standardError = errorPipe
         
         let path = NSString.path(withComponents: [self.store, entry]) + ".gpg"
-        process.arguments = ["-d", path]
+        process.arguments = (process.arguments ?? []) + ["-d", path]
         
         try process.run()
         process.waitUntilExit() // FIXME: blocks indefinitely if something's wrong with scdaemon

@@ -27,13 +27,32 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     static let defaultWrapperPath = "\(configPath)/gopass/gopass_wrapper.sh"
 
+    private static var previousActiveApplication: NSRunningApplication?
+
     var newEntryPanel: FloatingPanel!
     var pass: PassProtocol!
 //    var popover: NSPopover!
 
+    @MainActor static func captureFrontmostApplication() {
+        guard let app = NSWorkspace.shared.frontmostApplication else { return }
+        guard app.processIdentifier != NSRunningApplication.current.processIdentifier else { return }
+        previousActiveApplication = app
+        debugPrint("captured previous app", app.localizedName ?? "<unknown>", app.processIdentifier)
+    }
+
+    @MainActor static func restorePreviousApplication() {
+        guard let app = previousActiveApplication, !app.isTerminated else {
+            debugPrint("no previous app to restore")
+            return
+        }
+        debugPrint("restoring previous app", app.localizedName ?? "<unknown>", app.processIdentifier)
+        app.activate(options: [])
+    }
+
     @MainActor func applicationDidFinishLaunching(_ notification: Notification) {
         // FIXME: make this configurable
-        pass = GoPassWrapper(wrapper: AppDelegate.defaultWrapperPath)
+        pass = GoPassWrapper(executable: "gopass-jsonapi", arguments: ["listen"])
+        observeActiveApplications()
         
         // Set up the application menu
         setupMenuBar()
@@ -44,10 +63,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 //        newEntryPanel.center() no: using setFrameAutosaveName
         
         // Shows the panel and makes it active
+        AppDelegate.captureFrontmostApplication()
         newEntryPanel.makeKeyAndOrderFront(nil)
 
         KeyboardShortcuts.setShortcut(.init(.backslash, modifiers: [.command, .option]), for: .showFloatingPanel)
         KeyboardShortcuts.onKeyUp(for: .showFloatingPanel, action: {
+            AppDelegate.captureFrontmostApplication()
             self.newEntryPanel.makeKeyAndOrderFront(nil)
         })
 
@@ -58,14 +79,27 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 //        popover.contentViewController = NSHostingController(rootView: newEntryPanel.contentView)
 //        self.popover = popover
 
-        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
-        if !AXIsProcessTrustedWithOptions(options) {
-            debugPrint("Accessibility permission not granted — keypress simulation will not work")
-        }
+        if !CommandLine.arguments.contains("-uitesting") {
+            #if !DEBUG
+            PasteUtil.requestAccessibilityPermissionIfNeeded()
+            #endif
 
-        let center = UNUserNotificationCenter.current()
-        center.requestAuthorization(options: [.alert]) { (granted, error) in
-            debugPrint("requestAuthorization -> granted", granted)
+            let center = UNUserNotificationCenter.current()
+            center.requestAuthorization(options: [.alert]) { (granted, error) in
+                debugPrint("requestAuthorization -> granted", granted)
+            }
+        }
+    }
+
+    @MainActor private func observeActiveApplications() {
+        NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didActivateApplicationNotification,
+            object: nil,
+            queue: .main
+        ) { notification in
+            guard let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication else { return }
+            guard app.processIdentifier != NSRunningApplication.current.processIdentifier else { return }
+            AppDelegate.previousActiveApplication = app
         }
     }
 
@@ -99,7 +133,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         appMenuItem.submenu = appMenu
         
         let appName = ProcessInfo.processInfo.processName
-        appMenu.addItem(withTitle: "About \(appName)", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
+        let aboutItem = appMenu.addItem(withTitle: "About \(appName)", action: #selector(showAboutPanel), keyEquivalent: "")
+        aboutItem.target = self
         appMenu.addItem(NSMenuItem.separator())
         appMenu.addItem(withTitle: "Quit \(appName)", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         
@@ -118,6 +153,27 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         editMenu.addItem(withTitle: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
         
         NSApplication.shared.mainMenu = mainMenu
+    }
+
+    @objc private func showAboutPanel() {
+        let info = Bundle.main.infoDictionary ?? [:]
+        let version = info["CFBundleShortVersionString"] as? String ?? "unknown"
+        let build = info["CFBundleVersion"] as? String ?? "unknown"
+        let gitRef = info["GitRef"] as? String
+        let gitCommit = info["GitCommit"] as? String
+        let gitDetails: String
+        if let gitRef = gitRef, let gitCommit = gitCommit {
+            gitDetails = "Git ref: \(gitRef)\nGit commit: \(gitCommit)"
+        } else {
+            gitDetails = "Git version: \(version)"
+        }
+        let credits = NSAttributedString(string: gitDetails)
+
+        NSApplication.shared.orderFrontStandardAboutPanel(options: [
+            .version: version,
+            .applicationVersion: "Build \(build)",
+            .credits: credits,
+        ])
     }
 
     @MainActor private func createFloatingPanel() {

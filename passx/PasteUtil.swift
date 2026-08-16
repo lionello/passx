@@ -8,6 +8,7 @@
 
 import Foundation
 import Carbon
+import ApplicationServices
 
 class PasteUtil {
 
@@ -15,28 +16,66 @@ class PasteUtil {
 
     private init() {}
 
+    static func requestAccessibilityPermissionIfNeeded() {
+        guard !isAccessibilityTrusted(prompt: true) else { return }
+        debugPrint("Accessibility permission not granted — keypress simulation will not work")
+    }
+
+    private static func isAccessibilityTrusted(prompt: Bool = false) -> Bool {
+        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): prompt] as CFDictionary
+        return AXIsProcessTrustedWithOptions(options)
+    }
+
     static func paste(vk: CGKeyCode, flags: CGEventFlags = CGEventFlags(rawValue: 0)) -> Bool {
-        if let event1 = CGEvent(keyboardEventSource: nil, virtualKey: vk, keyDown: true) {
+        guard isAccessibilityTrusted() else {
+            debugPrint("Accessibility permission not granted — keypress simulation blocked")
+            return false
+        }
+
+        guard let source = CGEventSource(stateID: .hidSystemState) else {
+            debugPrint("failed to create keyboard event source")
+            return false
+        }
+
+        return paste(vk: vk, flags: flags, source: source)
+    }
+
+    @discardableResult
+    static func paste(keys: [KeyCode]) -> Bool {
+        guard isAccessibilityTrusted() else {
+            debugPrint("Accessibility permission not granted — keypress simulation blocked")
+            return false
+        }
+
+        guard let source = CGEventSource(stateID: .hidSystemState) else {
+            debugPrint("failed to create keyboard event source")
+            return false
+        }
+
+        debugPrint("posting key events", keys.count)
+        var didPostAllKeys = true
+        keys.forEach {
+            didPostAllKeys = paste(vk: $0.vk, flags: $0.flags, source: source) && didPostAllKeys
+            usleep(delay/10)
+        }
+        return didPostAllKeys
+    }
+
+    private static func paste(vk: CGKeyCode, flags: CGEventFlags, source: CGEventSource) -> Bool {
+        if let event1 = CGEvent(keyboardEventSource: source, virtualKey: vk, keyDown: true) {
             event1.flags = flags
-            event1.post(tap: .cghidEventTap)
+            event1.post(tap: .cgSessionEventTap)
 
             usleep(delay)
 
-            if let event2 = CGEvent(keyboardEventSource: nil, virtualKey: vk, keyDown: false) {
+            if let event2 = CGEvent(keyboardEventSource: source, virtualKey: vk, keyDown: false) {
                 event2.flags = flags
-                event2.post(tap: .cghidEventTap)
+                event2.post(tap: .cgSessionEventTap)
             }
             return true
         } else {
             debugPrint("failed to translate VK \(vk)")
             return false
-        }
-    }
-
-    static func paste(keys: [KeyCode]) {
-        keys.forEach {
-            _ = paste(vk: $0.vk, flags: $0.flags)
-            usleep(delay/10)
         }
     }
 
@@ -50,18 +89,28 @@ class PasteUtil {
     }
 
     static func paste(str: String) -> Bool {
+        guard isAccessibilityTrusted() else {
+            debugPrint("Accessibility permission not granted — text simulation blocked")
+            return false
+        }
+
+        guard let source = CGEventSource(stateID: .hidSystemState) else {
+            debugPrint("failed to create text event source")
+            return false
+        }
+
         let utf16Chars = Array(str.utf16)
 
-        if let event1 = CGEvent(keyboardEventSource: nil, virtualKey: 0x31, keyDown: true) {
+        if let event1 = CGEvent(keyboardEventSource: source, virtualKey: 0x31, keyDown: true) {
             event1.flags = .maskNonCoalesced
             event1.keyboardSetUnicodeString(stringLength: utf16Chars.count, unicodeString: utf16Chars)
-            event1.post(tap: .cghidEventTap)
+            event1.post(tap: .cgSessionEventTap)
 
             usleep(delay/10)
 
-            if let event2 = CGEvent(keyboardEventSource: nil, virtualKey: 0x31, keyDown: false) {
+            if let event2 = CGEvent(keyboardEventSource: source, virtualKey: 0x31, keyDown: false) {
                 event2.flags = .maskNonCoalesced
-                event2.post(tap: .cghidEventTap)
+                event2.post(tap: .cgSessionEventTap)
             }
             return true
         } else {

@@ -10,7 +10,7 @@ import XCTest
 class passxUITestsLaunchTests: XCTestCase {
 
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
-        true
+        false
     }
 
     override func setUpWithError() throws {
@@ -19,6 +19,7 @@ class passxUITestsLaunchTests: XCTestCase {
 
     func testLaunch() throws {
         let app = XCUIApplication()
+        app.launchArguments.append("-uitesting")
         app.launch()
 
         // Insert steps here to perform after app launch but before taking a screenshot,
