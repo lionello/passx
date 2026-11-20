@@ -39,9 +39,9 @@ struct KeyCommandTests {
         #expect(command(36, [.shift, .option]) == .perform(EntryAction(field: .current_totp, copy: true)))
     }
 
-    @Test func commandDigitPicksRow() {
-        #expect(command(18, .command, "1") == .performRow(0))
-        #expect(command(25, .command, "9") == .performRow(8))
+    @Test func commandDigitSelectsRow() {
+        #expect(command(18, .command, "1") == .selectRow(0))
+        #expect(command(25, .command, "9") == .selectRow(8))
         #expect(command(29, .command, "0") == nil)
         #expect(command(18, [], "1") == nil)
     }

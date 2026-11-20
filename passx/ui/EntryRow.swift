@@ -43,7 +43,7 @@ struct EntryRow: View {
 
             Spacer(minLength: 8)
 
-            // ⌘1…⌘9 picks a row directly, like Alfred and Spotlight
+            // ⌘1…⌘9 highlights a row directly
             if index < 9 {
                 Text("⌘\(index + 1)")
                     .font(.caption)

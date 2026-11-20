@@ -201,10 +201,9 @@ struct ContentView: View {
             let entry = highlightedIndex.map { viewModel.entries[$0] } ?? uiString
             guard !entry.isEmpty else { return }
             perform(action, on: entry, pressReturn: true)
-        case .performRow(let index):
+        case .selectRow(let index):
             guard index < count else { return }
             selectedIndex = index
-            perform(EntryAction(field: .password, copy: false), on: viewModel.entries[index])
         case .dismiss:
             if !uiString.isEmpty {
                 setText("")
@@ -436,8 +435,8 @@ enum KeyCommand: Equatable {
     case moveDown
     /// ↩ = password, ⌘↩ = username, ⌥↩ = one-time code; holding ⇧ copies instead of pastes
     case perform(EntryAction)
-    /// ⌘1…⌘9: paste the password of that row
-    case performRow(Int)
+    /// ⌘1…⌘9: highlight that row, so any ↩ action can follow
+    case selectRow(Int)
     /// Esc: clear the search, or close the panel when already empty
     case dismiss
 
@@ -470,7 +469,7 @@ enum KeyCommand: Equatable {
             }
         }
         if mods == .command, let characters = characters, let digit = Int(characters), (1...9).contains(digit) {
-            return .performRow(digit - 1)
+            return .selectRow(digit - 1)
         }
         return nil
     }
