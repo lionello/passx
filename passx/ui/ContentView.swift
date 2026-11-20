@@ -131,10 +131,10 @@ struct ContentView: View {
         .animation(.easeOut(duration: 0.18), value: viewModel.errorMessage)
     }
 
-    private func submitPassword(entry: String, addReturn: Bool, copyTOTP: Bool) -> Void {
+    private func submitPassword(entry: String, copyTOTP: Bool) -> Void {
         lastTask?.cancel()
         lastTask = Task.init {
-            await submitAndCloseAsync(entry: entry, field: .password, addReturn: addReturn)
+            await submitAndCloseAsync(entry: entry, field: .password)
             if copyTOTP {
                 await copyToClipboard(entry: entry, field: .current_totp)
             }
@@ -228,8 +228,9 @@ struct ContentView: View {
         }
         switch action.field {
         case .password:
-            // Like a browser autofill: type the password, press Return, and keep the TOTP handy for 2FA
-            submitPassword(entry: entry, addReturn: true, copyTOTP: true)
+            // Type the password but don't press Return, so options like "remember this device" can be ticked first;
+            // keep the TOTP handy for 2FA
+            submitPassword(entry: entry, copyTOTP: true)
         case .username:
             lastTask?.cancel()
             lastTask = Task.init {
