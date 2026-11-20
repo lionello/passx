@@ -28,6 +28,11 @@ struct ContentView: View {
     @State private var textField: NSTextField?
     @State private var textView: NSTextView? // in case we end up with a TextView
     @State private var lastTask: Task<Void, Never>?
+    /// Text currently shown in the search field, including any autocompleted suggestion
+    @State private var currentText: String = ""
+    /// Row picked with the arrow keys or mouse; `nil` means "follow the search text"
+    @State private var selectedIndex: Int?
+    @State private var keyMonitor: Any?
 
     @FocusState private var focusField: Focusable?
 
@@ -52,6 +57,8 @@ struct ContentView: View {
                     $0.focusRingType = .none
                 }
                 .onChange(of: input) { newValue in
+                    currentText = newValue
+                    selectedIndex = nil
                     self.viewModel.autocomplete(newValue)
                 }
                 .frame(minWidth: 512)
@@ -64,45 +71,43 @@ struct ContentView: View {
                         }
                     }
                 }
-                .onSubmit {
-                    if let suggestion = viewModel.entries.singleOrNil() {
-                        submitPassword(entry: suggestion, addReturn: true, copyTOTP: true)
-                    } else {
-                        submitPassword(entry: uiString, addReturn: true, copyTOTP: true)
-                    }
-                }
                 .focused($focusField, equals: .query)
                 .onAppear {
                     if !ContentView.runningForPreviews {
                         debugPrint("onAppear")
+                        installKeyMonitor()
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                             focusQuery()
                         }
                     }
                 }
+                .onDisappear {
+                    removeKeyMonitor()
+                }
 
             Divider()
 
-            let binding = Binding<String?>(
-                get: { self.uiString },
-                set: { self.input = $0 ?? "" }
-            )
             let entries = viewModel.entries.enumerated().map { index, entry in
                 Entry(id: entry, index: index)
             }
-            List(entries, id: \.id, selection: binding) { pair in
-                EntryRow(index: pair.index, entry: pair.id) { entry, submission in
-                    switch submission {
-                    case .Literal(let string):
-                        setText(entry)
-                        submitAndClose(text: string)
-                        break
-                    case .Field(let passField):
-                        submitAndClose(entry: entry, field: passField)
-                        break
+            let highlighted = highlightedIndex
+            ScrollViewReader { proxy in
+                List(entries, id: \.id) { pair in
+                    EntryRow(index: pair.index, entry: pair.id, isHighlighted: pair.index == highlighted) { entry, action in
+                        perform(action, on: entry)
+                    }
+                    .onTapGesture {
+                        selectedIndex = pair.index
                     }
                 }
-                .focused($focusField, equals: .entry(id: pair.id))
+                .onChange(of: highlighted) { index in
+                    if let index = index, index < viewModel.entries.count {
+                        proxy.scrollTo(viewModel.entries[index])
+                    }
+                }
+            }
+            .onReceive(viewModel.$entries) { _ in
+                selectedIndex = nil
             }
             .overlay {
                 if entries.isEmpty {
@@ -144,6 +149,112 @@ struct ContentView: View {
     private func setText(_ text: String) -> Void {
         textView?.string = text
         textField?.stringValue = text
+        currentText = text
+    }
+
+    /// The row that ↩ acts on: the one picked with the arrows, else the one matching the search text, else the first
+    private var highlightedIndex: Int? {
+        let entries = viewModel.entries
+        guard !entries.isEmpty else { return nil }
+        if let selectedIndex = selectedIndex, selectedIndex < entries.count {
+            return selectedIndex
+        }
+        return entries.firstIndex(of: currentText) ?? 0
+    }
+
+    private func installKeyMonitor() {
+        guard keyMonitor == nil else { return }
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            guard event.window === myWindow else { return event }
+            // Let the input method finish composing (e.g. Japanese/Chinese input) before we steal ↩ or arrows
+            if (textField?.currentEditor() as? NSTextView)?.hasMarkedText() == true || textView?.hasMarkedText() == true {
+                return event
+            }
+            guard let command = KeyCommand.from(keyCode: event.keyCode, modifiers: event.modifierFlags, characters: event.charactersIgnoringModifiers) else {
+                return event
+            }
+            handle(command)
+            return nil
+        }
+    }
+
+    private func removeKeyMonitor() {
+        if let keyMonitor = keyMonitor {
+            NSEvent.removeMonitor(keyMonitor)
+        }
+        keyMonitor = nil
+    }
+
+    private func handle(_ command: KeyCommand) {
+        let count = viewModel.entries.count
+        switch command {
+        case .moveUp:
+            if let index = highlightedIndex {
+                selectedIndex = max(index - 1, 0)
+            }
+        case .moveDown:
+            if let index = highlightedIndex {
+                selectedIndex = min(index + 1, count - 1)
+            }
+        case .perform(let action):
+            // With no results, fall back to treating the search text as the entry name
+            let entry = highlightedIndex.map { viewModel.entries[$0] } ?? uiString
+            guard !entry.isEmpty else { return }
+            perform(action, on: entry)
+        case .performRow(let index):
+            guard index < count else { return }
+            selectedIndex = index
+            perform(EntryAction(field: .password, copy: false), on: viewModel.entries[index])
+        case .dismiss:
+            if !uiString.isEmpty {
+                setText("")
+                input = ""
+            } else {
+                closeAndRestore()
+            }
+        }
+    }
+
+    private func perform(_ action: EntryAction, on entry: String) {
+        setText(entry)
+        if action.copy {
+            lastTask?.cancel()
+            lastTask = Task.init {
+                if await copyToClipboard(entry: entry, field: action.field) {
+                    closeAndRestore()
+                }
+            }
+            return
+        }
+        switch action.field {
+        case .password:
+            // Like a browser autofill: type the password, press Return, and keep the TOTP handy for 2FA
+            submitPassword(entry: entry, addReturn: true, copyTOTP: true)
+        case .username:
+            lastTask?.cancel()
+            lastTask = Task.init {
+                if let username = await username(for: entry) {
+                    submitAndClose(text: username)
+                }
+            }
+        default:
+            submitAndClose(entry: entry, field: action.field)
+        }
+    }
+
+    /// The `username:` field of the entry if it has one, else the last path component (pass convention: `site/username`)
+    private func username(for entry: String) async -> String? {
+        if let username = try? await viewModel.pass.getLogin(entry: entry, field: .username), !username.isEmpty {
+            return username
+        }
+        return entry.split(separator: "/").last.map(String.init)
+    }
+
+    private func closeAndRestore() {
+        focusQuery()
+        myWindow?.close()
+        NSApplication.shared.hide(nil)
+        AppDelegate.restorePreviousApplication()
     }
 
     private func setSuggestion(_ result: String) -> Void {
@@ -161,16 +272,20 @@ struct ContentView: View {
         textField?.currentEditor()?.selectAll(self)
     }
 
-    func copyToClipboard(entry: String, field: PassField) async -> Void {
+    @discardableResult
+    func copyToClipboard(entry: String, field: PassField) async -> Bool {
         do {
             debugPrint("copy entry", entry, "field", field)
-            if let text = try await viewModel.pass.getLogin(entry: entry, field: field) {
-                _ = CopyUtil.copyToClipboard(text)
+            let text = field == .username ? await username(for: entry) : try await viewModel.pass.getLogin(entry: entry, field: field)
+            if let text = text {
+                // Never show the password itself in Notification Center
+                return CopyUtil.copyToClipboard(text, description: field == .password ? "Password for \(entry)" : nil)
             }
         }
         catch {
             debugPrint(error.localizedDescription)
         }
+        return false
     }
 
     private func _submitAndClose(_ text: String, addReturn: Bool = false) throws {
@@ -286,9 +401,10 @@ private struct FooterBar: View {
                 Text("\(shortcut.description) to open")
             }
             Spacer()
-            Text("↩ Paste password")
-            Text("⌘1 Username")
-            Text("⌥⌘1 Password")
+            Text("↩ Password")
+            Text("⌘↩ Username")
+            Text("⌥↩ Code")
+            Text("⇧ Copy")
         }
         .font(.caption)
         .foregroundColor(.secondary)
@@ -312,9 +428,50 @@ struct ContentView_Previews: PreviewProvider {
     }
 }
 
-extension Array {
-    func singleOrNil() -> Element? {
-        return count == 1 ? self[0] : nil
+/// Keyboard commands for the search panel, modeled after Spotlight/Alfred/Raycast/1Password Quick Access:
+/// focus stays in the search field, ↑/↓ move the highlight, ↩ acts on the highlighted row.
+enum KeyCommand: Equatable {
+    case moveUp
+    case moveDown
+    /// ↩ = password, ⌘↩ = username, ⌥↩ = one-time code; holding ⇧ copies instead of pastes
+    case perform(EntryAction)
+    /// ⌘1…⌘9: paste the password of that row
+    case performRow(Int)
+    /// Esc: clear the search, or close the panel when already empty
+    case dismiss
+
+    static func from(keyCode: UInt16, modifiers: NSEvent.ModifierFlags, characters: String?) -> KeyCommand? {
+        let mods = modifiers.intersection([.command, .option, .control, .shift])
+        switch keyCode {
+        case 126 where mods.isEmpty: // ↑
+            return .moveUp
+        case 125 where mods.isEmpty: // ↓
+            return .moveDown
+        case 36, 76: // Return, keypad Enter
+            let copy = mods.contains(.shift)
+            switch mods.subtracting(.shift) {
+            case []: return .perform(EntryAction(field: .password, copy: copy))
+            case .command: return .perform(EntryAction(field: .username, copy: copy))
+            case .option: return .perform(EntryAction(field: .current_totp, copy: copy))
+            default: return nil
+            }
+        case 53 where mods.isEmpty: // Esc
+            return .dismiss
+        default:
+            break
+        }
+        // Emacs-style ⌃N/⌃P, as supported by Spotlight and Raycast
+        if mods == .control {
+            switch characters {
+            case "n": return .moveDown
+            case "p": return .moveUp
+            default: return nil
+            }
+        }
+        if mods == .command, let characters = characters, let digit = Int(characters), (1...9).contains(digit) {
+            return .performRow(digit - 1)
+        }
+        return nil
     }
 }
 

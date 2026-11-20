@@ -7,87 +7,99 @@
 
 import SwiftUI
 
-enum Submission {
-    case Literal(String)
-    case Field(PassField)
+/// What to do with a field of an entry: type it into the previous app, or put it on the clipboard
+struct EntryAction: Equatable {
+    let field: PassField
+    let copy: Bool
 }
 
 struct EntryRow: View {
 
     let index: Int
     let entry: String
-    let submit: (String,Submission) -> Void
+    let isHighlighted: Bool
+    let perform: (String, EntryAction) -> Void
 
-    // Map from index to keyboard shortcut character (note that the tenth row maps to '0')
-    static let charForIndex : [Int:Character] = [0: "1", 1: "2", 2: "3", 3: "4", 4: "5", 5: "6", 6: "7", 7: "8", 8: "9", 9: "0"]
-
-    private static let linkDetector = try! NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
+    private static let linkDetector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
 
     var body: some View {
-        HStack {
-            let char = EntryRow.charForIndex[index]
-            let key = char.map { KeyEquivalent($0) }
-
-            // Show link (or text) for the site or app
+        HStack(spacing: 8) {
+            // Show the site (as a link, if it looks like one) and the username
             let slash = entry.lastIndex(of: "/")
-            if let slash = slash {
-                let url = entry[..<slash]
-                if let match = EntryRow.linkDetector.firstMatch(in: entry, options: [], range: NSRange(..<url.count)),
-                   let matchURL = match.url {
-                    Link(url, destination: matchURL)
-                } else {
-                    Text(url)
-                }
-            }
-
-            // Show button for the username
             let username = slash.map { String(entry[entry.index(after: $0)...]) } ?? entry
-            Button {
-                submit(entry, .Literal(username))
-            } label: {
-                Text(username)
-                if let char = char {
-                    Text("⌘\(char.description)").opacity(0.5)
+            if let slash = slash {
+                let site = String(entry[..<slash])
+                if let match = EntryRow.linkDetector?.firstMatch(in: site, options: [], range: NSRange(location: 0, length: (site as NSString).length)),
+                   let url = match.url {
+                    Link(site, destination: url)
+                } else {
+                    Text(site)
+                        .foregroundColor(.secondary)
                 }
             }
-            .keyboardShortcut(key)
+            Text(username)
+                .fontWeight(.medium)
+                .lineLimit(1)
 
-            // Show button for the password
-            Button {
-                submit(entry, .Field(.password))
-            } label: {
-                Text("●●●")
-                if let char = char {
-                    Text("⌥⌘\(char.description)").opacity(0.5)
-                }
+            Spacer(minLength: 8)
+
+            // ⌘1…⌘9 picks a row directly, like Alfred and Spotlight
+            if index < 9 {
+                Text("⌘\(index + 1)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             }
-            .keyboardShortcut(key, modifiers: [.command, .option])
 
-            // Show a context menu for all other options
-            Menu("…") {
-                Button("Username") {
-                    submit(entry, .Field(.username))
-                }
-                .keyboardShortcut(key, modifiers: [.command, .control])
-                Button("TOTP") {
-                  submit(entry, .Field(.current_totp))
-                }
-                .keyboardShortcut(key, modifiers: [.command, .control, .option])
+            Button {
+                perform(entry, EntryAction(field: .username, copy: false))
+            } label: {
+                Image(systemName: "person")
+            }
+            .help("Paste username (⌘↩)")
+            .accessibilityLabel("Paste username")
+
+            Button {
+                perform(entry, EntryAction(field: .password, copy: false))
+            } label: {
+                Image(systemName: "key")
+            }
+            .help("Paste password (↩)")
+            .accessibilityLabel("Paste password")
+
+            Menu {
+                Button("Paste Username") { perform(entry, EntryAction(field: .username, copy: false)) }
+                Button("Paste Password") { perform(entry, EntryAction(field: .password, copy: false)) }
+                Button("Paste One-Time Code") { perform(entry, EntryAction(field: .current_totp, copy: false)) }
+                Divider()
+                Button("Copy Username") { perform(entry, EntryAction(field: .username, copy: true)) }
+                Button("Copy Password") { perform(entry, EntryAction(field: .password, copy: true)) }
+                Button("Copy One-Time Code") { perform(entry, EntryAction(field: .current_totp, copy: true)) }
+            } label: {
+                Image(systemName: "ellipsis")
             }
             .menuIndicator(.hidden)
             .fixedSize()
+            .help("More actions")
+            .accessibilityLabel("More actions")
         }
+        .buttonStyle(.borderless)
+        .padding(.vertical, 4)
+        .padding(.horizontal, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 6)
+                .fill(isHighlighted ? Color.accentColor.opacity(0.2) : Color.clear)
+        )
+        .contentShape(Rectangle())
     }
 }
 
 struct EntryRow_Previews: PreviewProvider {
     static var previews: some View {
         List {
-            EntryRow(index: 0, entry: "username") { _, _ in }
-            EntryRow(index: 1, entry: "example.com/username") { _, _ in }
-            Text("…")
-            EntryRow(index: 9, entry: "username") { _, _ in }
-            EntryRow(index: 10, entry: "example.com/username") { _, _ in }
+            EntryRow(index: 0, entry: "username", isHighlighted: false) { _, _ in }
+            EntryRow(index: 1, entry: "example.com/username", isHighlighted: true) { _, _ in }
+            EntryRow(index: 9, entry: "example.com/username", isHighlighted: false) { _, _ in }
         }
+        .frame(width: 512)
     }
 }

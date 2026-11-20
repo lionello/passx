@@ -12,10 +12,11 @@ class CopyUtil {
 
     private init() {}
 
-    static func copyToClipboard(_ text: String) -> Bool {
+    /// - Parameter description: shown in the notification instead of `text` (use this for secrets)
+    static func copyToClipboard(_ text: String, description: String? = nil) -> Bool {
         NSPasteboard.general.clearContents()
         if NSPasteboard.general.setString(text, forType: .string) {
-            showBanner(title: "Copied to clipboard", body: text)
+            showBanner(title: "Copied to clipboard", body: description ?? text)
             return true
         } else {
             debugPrint("NSPasteboard.general.setString failed")
