@@ -21,8 +21,11 @@ mkdir -p "$BUILD_DIR"
 
 # Developer ID builds need a secure timestamp; ad-hoc signatures can't have one
 SIGN_FLAGS=""
+TEAM_ID=""
 if [ "$SIGN_IDENTITY" != "-" ]; then
     SIGN_FLAGS="--timestamp"
+    # Package targets need a team when signing with a real identity; take it from the cert name, e.g. "... (FE3JVHBHV2)"
+    TEAM_ID="$(security find-identity -v -p codesigning | grep -F "\"$SIGN_IDENTITY" | head -1 | sed -E 's/.*\(([A-Z0-9]+)\)".*/\1/')"
 fi
 
 # Override the project's manual signing (which expects a provisioning profile that isn't needed for Developer ID)
@@ -33,6 +36,7 @@ xcodebuild build \
     -derivedDataPath "$BUILD_DIR/DerivedData" \
     CODE_SIGN_STYLE=Manual \
     CODE_SIGN_IDENTITY="$SIGN_IDENTITY" \
+    DEVELOPMENT_TEAM="$TEAM_ID" \
     PROVISIONING_PROFILE_SPECIFIER="" \
     OTHER_CODE_SIGN_FLAGS="$SIGN_FLAGS"
 
@@ -55,6 +59,9 @@ for attempt in 1 2 3 4 5; do
     fi
     sleep 5
 done
+
+# Don't leave a second copy of the app around for Spotlight to find
+rm -rf "$STAGING"
 
 if [ "$SIGN_IDENTITY" != "-" ]; then
     codesign --sign "$SIGN_IDENTITY" --timestamp "$DMG"

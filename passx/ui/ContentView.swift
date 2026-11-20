@@ -131,10 +131,10 @@ struct ContentView: View {
         .animation(.easeOut(duration: 0.18), value: viewModel.errorMessage)
     }
 
-    private func submitPassword(entry: String, copyTOTP: Bool) -> Void {
+    private func submitPassword(entry: String, addReturn: Bool, copyTOTP: Bool) -> Void {
         lastTask?.cancel()
         lastTask = Task.init {
-            await submitAndCloseAsync(entry: entry, field: .password)
+            await submitAndCloseAsync(entry: entry, field: .password, addReturn: addReturn)
             if copyTOTP {
                 await copyToClipboard(entry: entry, field: .current_totp)
             }
@@ -200,7 +200,7 @@ struct ContentView: View {
             // With no results, fall back to treating the search text as the entry name
             let entry = highlightedIndex.map { viewModel.entries[$0] } ?? uiString
             guard !entry.isEmpty else { return }
-            perform(action, on: entry)
+            perform(action, on: entry, pressReturn: true)
         case .performRow(let index):
             guard index < count else { return }
             selectedIndex = index
@@ -215,7 +215,8 @@ struct ContentView: View {
         }
     }
 
-    private func perform(_ action: EntryAction, on entry: String) {
+    /// `pressReturn` is set for the keyboard (↩ submits the form, like autofill); clicking the key icon only types the password
+    private func perform(_ action: EntryAction, on entry: String, pressReturn: Bool = false) {
         setText(entry)
         if action.copy {
             lastTask?.cancel()
@@ -228,9 +229,8 @@ struct ContentView: View {
         }
         switch action.field {
         case .password:
-            // Type the password but don't press Return, so options like "remember this device" can be ticked first;
-            // keep the TOTP handy for 2FA
-            submitPassword(entry: entry, copyTOTP: true)
+            // Keep the TOTP handy for 2FA
+            submitPassword(entry: entry, addReturn: pressReturn, copyTOTP: true)
         case .username:
             lastTask?.cancel()
             lastTask = Task.init {
