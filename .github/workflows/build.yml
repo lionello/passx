@@ -69,7 +69,14 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           security list-keychain -d user -s $KEYCHAIN_PATH
 
-          echo "SIGN_IDENTITY=Developer ID Application" >> $GITHUB_ENV
+          # Only sign with Developer ID if the secret actually holds a valid (unexpired) Developer ID identity
+          IDENTITIES=$(security find-identity -v -p codesigning $KEYCHAIN_PATH)
+          if echo "$IDENTITIES" | grep -q '"Developer ID Application'; then
+            echo "SIGN_IDENTITY=Developer ID Application" >> $GITHUB_ENV
+          else
+            ALL=$(security find-identity -p codesigning $KEYCHAIN_PATH | grep '"' | sed 's/^ *[0-9]*) [0-9A-F]* //' | tr '\n' ' ')
+            echo "::warning title=No valid Developer ID certificate::BUILD_CERTIFICATE_BASE64 contains: ${ALL:-no identities}. Building ad-hoc signed DMG instead."
+          fi
 
       # Signs with Developer ID when the certificate was installed (ad-hoc otherwise),
       # and notarizes when the NOTARY_* secrets are set
@@ -79,7 +86,11 @@ jobs:
           NOTARY_PASSWORD: ${{ secrets.NOTARY_PASSWORD }}
           NOTARY_TEAM_ID: ${{ secrets.NOTARY_TEAM_ID }}
         run: |
-          scripts/build-dmg.sh
+          # Repeat errors as annotations, which are visible without access to the logs
+          if ! scripts/build-dmg.sh 2>&1 | tee build-dmg.log; then
+            grep -E 'error:|\*\* BUILD FAILED' build-dmg.log | sort -u | head -10 | sed 's/^/::error::/'
+            exit 1
+          fi
           echo "DMG=$(ls build/passx-*.dmg)" >> $GITHUB_ENV
 
       - name: Upload DMG
