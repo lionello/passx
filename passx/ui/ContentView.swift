@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Introspect
+import KeyboardShortcuts
 
 enum Focusable: Hashable {
     case query
@@ -38,9 +39,11 @@ struct ContentView: View {
 
     static let runningForPreviews = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
 
+    static let appName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? "passx"
+
     var body: some View {
-        VStack {
-            SearchTextField(query: $input)
+        VStack(spacing: 0) {
+            SearchTextField(query: $input, placeholder: "Search passwords", icon: NSApplication.shared.applicationIconImage)
                 .introspectTextView {
                     self.textView = $0
                 }
@@ -51,7 +54,8 @@ struct ContentView: View {
                 .onChange(of: input) { newValue in
                     self.viewModel.autocomplete(newValue)
                 }
-                .frame(width: 512, height: 30)
+                .frame(minWidth: 512)
+                .frame(height: 52)
                 .onReceive(viewModel.$suggestion) {
                     if let result = $0 {
                         // Only replace the current query if the suggestion is longer than the query
@@ -100,6 +104,11 @@ struct ContentView: View {
                 }
                 .focused($focusField, equals: .entry(id: pair.id))
             }
+            .overlay {
+                if entries.isEmpty {
+                    EmptyState(appName: ContentView.appName, isSearching: !input.isEmpty)
+                }
+            }
 
             if let errorMessage = viewModel.errorMessage {
                 ErrorBanner(message: errorMessage) {
@@ -107,8 +116,12 @@ struct ContentView: View {
                 }
                 .padding(.horizontal, 8)
                 .padding(.bottom, 8)
+                .padding(.top, 8)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
+
+            Divider()
+            FooterBar(appName: ContentView.appName)
         }
         .animation(.easeOut(duration: 0.18), value: viewModel.errorMessage)
     }
@@ -238,6 +251,53 @@ private struct ErrorBanner: View {
     }
 }
 
+/// Shown in place of the (empty) result list so the panel is recognizable at a glance
+private struct EmptyState: View {
+    let appName: String
+    let isSearching: Bool
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Image(nsImage: NSApplication.shared.applicationIconImage)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 64, height: 64)
+                .accessibilityHidden(true)
+            Text(appName)
+                .font(.title2.weight(.semibold))
+            Text(isSearching ? "No matching passwords" : "Type to search your password store")
+                .font(.callout)
+                .foregroundColor(.secondary)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+/// Bottom bar with the app name and the most important keyboard hints
+private struct FooterBar: View {
+    let appName: String
+
+    var body: some View {
+        HStack(spacing: 14) {
+            Text(appName)
+                .fontWeight(.semibold)
+            if let shortcut = KeyboardShortcuts.getShortcut(for: .showFloatingPanel) {
+                Text("\(shortcut.description) to open")
+            }
+            Spacer()
+            Text("↩ Paste password")
+            Text("⌘1 Username")
+            Text("⌥⌘1 Password")
+        }
+        .font(.caption)
+        .foregroundColor(.secondary)
+        .lineLimit(1)
+        .padding(.horizontal, 12)
+        .frame(height: 26)
+    }
+}
+
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView(myWindow: nil)
@@ -246,6 +306,9 @@ struct ContentView_Previews: PreviewProvider {
         ContentView(myWindow: nil)
             .preferredColorScheme(.dark)
             .environmentObject(PassViewModel(pass: MockPass(), entries: ["username"]))
+
+        ContentView(myWindow: nil)
+            .environmentObject(PassViewModel(pass: MockPass()))
     }
 }
 
