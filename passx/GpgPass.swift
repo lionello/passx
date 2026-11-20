@@ -43,15 +43,19 @@ class GpgPass : PassProtocol {
         process.arguments = (process.arguments ?? []) + ["-d", path]
         
         try process.run()
+        // Drain both pipes before waiting, so the process can't block on a full pipe buffer
+        async let output = outputPipe.fileHandleForReading.readUtf8()
+        async let errors = errorPipe.fileHandleForReading.readUtf8()
+        let (stdout, stderr) = try await (output, errors)
         process.waitUntilExit() // FIXME: blocks indefinitely if something's wrong with scdaemon
-        
+
         if process.terminationStatus != 0 {
-            throw PassError.err(msg: try errorPipe.fileHandleForReading.readUtf8())
+            throw PassError.err(msg: stderr)
         }
 
-        let lines = try outputPipe.fileHandleForReading.readUtf8()?.split(separator: "\n")
+        let lines = stdout.split(separator: "\n")
         // FIXME: add special case for .url
-        if let pw = lines?.first(where: { field.isMatch($0.lowercased()) }) {
+        if let pw = lines.first(where: { field.isMatch($0.lowercased()) }) {
             // FIXME: calculate TOTP for .current_totp
             return String(pw)
         }
@@ -61,11 +65,11 @@ class GpgPass : PassProtocol {
 
 extension FileHandle {
 
-    @available(*, deprecated, message: "blocking")
-    func readUtf8() throws -> String? {
-        guard let data = try self.readToEnd() else {
-            return nil
+    func readUtf8() async throws -> String {
+        var data = Data()
+        for try await byte in self.bytes {
+            data.append(byte)
         }
-        return String(data: data, encoding: .utf8)
+        return String(decoding: data, as: UTF8.self)
     }
 }
