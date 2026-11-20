@@ -143,7 +143,7 @@ class PasteUtil {
         return NSString(characters: unicodeString, length: actualStringLength) as String
     }
 
-    struct KeyCode {
+    struct KeyCode: Equatable {
         var vk: CGKeyCode
         var flags: CGEventFlags
     }

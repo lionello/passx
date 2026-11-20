@@ -16,11 +16,3 @@ class PasteUtilTests: XCTestCase {
     }
 
 }
-
-extension PasteUtil.KeyCode : Equatable {
-
-    public static func == (lhs: PasteUtil.KeyCode, rhs: PasteUtil.KeyCode) -> Bool {
-        return lhs.vk == rhs.vk && lhs.flags == rhs.flags
-    }
-
-}

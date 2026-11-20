@@ -56,7 +56,7 @@ struct ContentView: View {
                     self.textField = $0
                     $0.focusRingType = .none
                 }
-                .onChange(of: input) { newValue in
+                .onChange(of: input) { _, newValue in
                     currentText = newValue
                     selectedIndex = nil
                     self.viewModel.autocomplete(newValue)
@@ -100,7 +100,7 @@ struct ContentView: View {
                         selectedIndex = pair.index
                     }
                 }
-                .onChange(of: highlighted) { index in
+                .onChange(of: highlighted) { _, index in
                     if let index = index, index < viewModel.entries.count {
                         proxy.scrollTo(viewModel.entries[index])
                     }
