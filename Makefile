@@ -9,5 +9,10 @@ install:
 
 clean:
 	xcodebuild clean
+	rm -rf build
 
-.PHONY: build install clean
+# Packages build/passx-<version>.dmg; see scripts/build-dmg.sh for signing/notarization env vars
+dmg:
+	scripts/build-dmg.sh
+
+.PHONY: build install clean dmg

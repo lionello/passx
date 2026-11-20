@@ -11,3 +11,6 @@ xcuserdata/
 # Certificates and build artifacts
 *.p12
 *.dmg
+
+# Build output
+build/
