@@ -31,6 +31,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     var newEntryPanel: FloatingPanel!
     var pass: PassProtocol!
+    var viewModel: PassViewModel!
 //    var popover: NSPopover!
 
     @MainActor static func captureFrontmostApplication() {
@@ -87,6 +88,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let center = UNUserNotificationCenter.current()
             center.requestAuthorization(options: [.alert]) { (granted, error) in
                 debugPrint("requestAuthorization -> granted", granted)
+            }
+
+            Task {
+                let problems = await Doctor.check()
+                if !problems.isEmpty {
+                    viewModel.showError(problems.joined(separator: "\n"))
+                }
             }
         }
     }
@@ -182,9 +190,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Create the SwiftUI view that provides the window contents.
         // I've opted to ignore top safe area as well, since we're hiding the traffic icons
+        viewModel = PassViewModel(pass: pass)
         let contentView = ContentView(myWindow: newEntryPanel)
             .edgesIgnoringSafeArea(.top)
-            .environmentObject(PassViewModel(pass: pass))
+            .environmentObject(viewModel)
 
         // The title bar is hidden, but the title still shows in Mission Control and to VoiceOver
         newEntryPanel.title = ContentView.appName

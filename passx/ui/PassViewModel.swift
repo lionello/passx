@@ -61,6 +61,10 @@ final class PassViewModel : ObservableObject {
         }
     }
 
+    func showError(_ message: String) {
+        errorMessage = message
+    }
+
     func dismissError() {
         errorMessage = nil
     }

@@ -279,7 +279,8 @@ struct ContentView: View {
             let text = field == .username ? await username(for: entry) : try await viewModel.pass.getLogin(entry: entry, field: field)
             if let text = text {
                 // Never show the password itself in Notification Center
-                return CopyUtil.copyToClipboard(text, description: field == .password ? "Password for \(entry)" : nil)
+                let secret = field == .password || field == .current_totp
+                return CopyUtil.copyToClipboard(text, description: field == .password ? "Password for \(entry)" : nil, secret: secret)
             }
         }
         catch {

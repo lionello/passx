@@ -19,10 +19,12 @@ class GpgPass : PassProtocol {
     
     private let gpg: String
     private let store: String
-    
-    init(gpg: String, store: String) {
+    private let timeout: Duration
+
+    init(gpg: String, store: String, timeout: Duration = defaultPassTimeout) {
         self.gpg = gpg
         self.store = store
+        self.timeout = timeout
     }
     
     func getLogin(entry: String, field: PassField) async throws -> String? {
@@ -43,12 +45,18 @@ class GpgPass : PassProtocol {
         process.arguments = (process.arguments ?? []) + ["-d", path]
         
         try process.run()
+        // Kill gpg if it hangs (e.g. on a stuck scdaemon); that closes the pipes, so the reads below finish too
+        let timeoutTask = process.terminate(after: timeout)
         // Drain both pipes before waiting, so the process can't block on a full pipe buffer
         async let output = outputPipe.fileHandleForReading.readUtf8()
         async let errors = errorPipe.fileHandleForReading.readUtf8()
         let (stdout, stderr) = try await (output, errors)
-        process.waitUntilExit() // FIXME: blocks indefinitely if something's wrong with scdaemon
+        process.waitUntilExit()
+        timeoutTask.cancel()
 
+        if await timeoutTask.value {
+            throw PassError.timedOut(command: "gpg", after: timeout)
+        }
         if process.terminationStatus != 0 {
             throw PassError.err(msg: stderr)
         }

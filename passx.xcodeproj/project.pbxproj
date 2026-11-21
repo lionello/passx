@@ -32,6 +32,8 @@
 		DDBC5592277C295200544E4D /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = DDBC5591277C295200544E4D /* KeyboardShortcuts */; };
 		DDBC5596277C398700544E4D /* PasteUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBC5595277C398700544E4D /* PasteUtil.swift */; };
 		DDC1758A30B00BD7005A0AA1 /* KeyCommandTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1758930B00BD7005A0AA1 /* KeyCommandTests.swift */; };
+		DDC1758E30B1F27F005A0AA1 /* Doctor.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1758D30B1F27F005A0AA1 /* Doctor.swift */; };
+		DDC1759030B1F2A3005A0AA1 /* RobustnessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1758F30B1F2A3005A0AA1 /* RobustnessTests.swift */; };
 		DDC2087A27C6960E00EAD647 /* PasteUtilTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC2087927C6960E00EAD647 /* PasteUtilTests.swift */; };
 		DDC78FFA2886219200953F5B /* CopyUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC78FF92886219200953F5B /* CopyUtil.swift */; };
 /* End PBXBuildFile section */
@@ -81,6 +83,8 @@
 		DDBC558E277C27B300544E4D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		DDBC5595277C398700544E4D /* PasteUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteUtil.swift; sourceTree = "<group>"; };
 		DDC1758930B00BD7005A0AA1 /* KeyCommandTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyCommandTests.swift; sourceTree = "<group>"; };
+		DDC1758D30B1F27F005A0AA1 /* Doctor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Doctor.swift; sourceTree = "<group>"; };
+		DDC1758F30B1F2A3005A0AA1 /* RobustnessTests.swift */ = {isa = PBXFileReference; path = RobustnessTests.swift; sourceTree = "<group>"; };
 		DDC2087927C6960E00EAD647 /* PasteUtilTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteUtilTests.swift; sourceTree = "<group>"; };
 		DDC78FF92886219200953F5B /* CopyUtil.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CopyUtil.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -161,6 +165,7 @@
 				DDBC555F277C0C9E00544E4D /* Preview Content */,
 				DD3CBE3C27A2EDFC00A8538C /* ui */,
 				DDA23AB02FA7DEEB003E7221 /* main.swift */,
+				DDC1758D30B1F27F005A0AA1 /* Doctor.swift */,
 			);
 			path = passx;
 			sourceTree = "<group>";
@@ -182,6 +187,7 @@
 				DD8562C527A5C05000408410 /* PassViewModelTests.swift */,
 				DDC2087927C6960E00EAD647 /* PasteUtilTests.swift */,
 				DDC1758930B00BD7005A0AA1 /* KeyCommandTests.swift */,
+				DDC1758F30B1F2A3005A0AA1 /* RobustnessTests.swift */,
 			);
 			path = passxTests;
 			sourceTree = "<group>";
@@ -358,6 +364,7 @@
 			files = (
 				DDBC558F277C27B300544E4D /* AppDelegate.swift in Sources */,
 				DD6F8678277FBBB500E903D4 /* SearchTextField.swift in Sources */,
+				DDC1758E30B1F27F005A0AA1 /* Doctor.swift in Sources */,
 				DDBC555C277C0C9D00544E4D /* ContentView.swift in Sources */,
 				DD3CBE3927A25DD000A8538C /* MockPass.swift in Sources */,
 				DDBC5589277C184500544E4D /* GpgPass.swift in Sources */,
@@ -383,6 +390,7 @@
 				DD6F8674277D4E2800E903D4 /* GoPassWrapperTests.swift in Sources */,
 				DDBC556C277C0C9E00544E4D /* GpgPassTests.swift in Sources */,
 				DD8562C827A6FA5900408410 /* Extensions.swift in Sources */,
+				DDC1759030B1F2A3005A0AA1 /* RobustnessTests.swift in Sources */,
 				DDC2087A27C6960E00EAD647 /* PasteUtilTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

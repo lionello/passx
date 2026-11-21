@@ -11,6 +11,7 @@ enum PassError : Error {
     case err(msg: String?)
     case notImplemented
     case invalidNativeMessage
+    case timedOut(command: String, after: Duration)
 }
 
 extension PassError: LocalizedError {
@@ -22,6 +23,8 @@ extension PassError: LocalizedError {
             return "Not implemented"
         case .invalidNativeMessage:
             return "Invalid native message"
+        case .timedOut(let command, let after):
+            return "\(command) did not respond within \(after.formatted(.units(allowed: [.seconds]))). Is your security key plugged in? Restarting gpg-agent may help: gpgconf --kill gpg-agent scdaemon"
         }
     }
 }
@@ -47,6 +50,27 @@ enum PassField : String {
 
     func isMatch(_ line: String) -> Bool {
         return prefixes().contains(where: line.hasPrefix)
+    }
+}
+
+/// Long enough to type a passphrase into pinentry or touch a security key, short enough to recover from a stuck scdaemon
+let defaultPassTimeout: Duration = .seconds(60)
+
+extension Process {
+    /// Terminates the process if it's still running after `timeout`.
+    /// Cancel the returned task once the process is done; its value tells whether the timeout fired.
+    func terminate(after timeout: Duration) -> Task<Bool, Never> {
+        Task {
+            do {
+                try await Task.sleep(for: timeout)
+            } catch {
+                return false
+            }
+            guard isRunning else { return false }
+            debugPrint("terminating", executableURL?.lastPathComponent ?? "process", "after", timeout)
+            terminate()
+            return true
+        }
     }
 }
 

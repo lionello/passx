@@ -12,15 +12,18 @@ import Foundation
 class GoPassWrapper : PassProtocol {
     private let executable: String
     private let arguments: [String]
+    private let timeout: Duration
 
-    init(wrapper: String) {
+    init(wrapper: String, timeout: Duration = defaultPassTimeout) {
         self.executable = wrapper
         self.arguments = []
+        self.timeout = timeout
     }
 
-    init(executable: String, arguments: [String] = []) {
+    init(executable: String, arguments: [String] = [], timeout: Duration = defaultPassTimeout) {
         self.executable = executable
         self.arguments = arguments
+        self.timeout = timeout
     }
     
     func getLogin(entry: String, field: PassField) async throws -> String? {
@@ -93,7 +96,10 @@ class GoPassWrapper : PassProtocol {
 
     private func invokeJsonApi(_ json: Any) async throws -> Any {
         let subprocess = try Subprocess(executable: self.executable, arguments: self.arguments)
+        // Kill gopass-jsonapi if it hangs (e.g. on a stuck scdaemon); that closes stdout, so the read below finishes too
+        let timeoutTask = subprocess.process.terminate(after: timeout)
         defer {
+            timeoutTask.cancel()
             subprocess.process.interrupt()
         }
 
@@ -104,6 +110,10 @@ class GoPassWrapper : PassProtocol {
         do {
             message = try await subprocess.stdout.nativeMessage()
         } catch {
+            timeoutTask.cancel()
+            if await timeoutTask.value {
+                throw PassError.timedOut(command: (executable as NSString).lastPathComponent, after: timeout)
+            }
             let stderrData = try? subprocess.stderr.readToEnd()
             let stderr = stderrData.flatMap { String(data: $0, encoding: .utf8) }
             if let stderr = stderr?.trimmingCharacters(in: .whitespacesAndNewlines), !stderr.isEmpty {
